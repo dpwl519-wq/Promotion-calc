@@ -447,14 +447,27 @@
     var n = parseFloat(s);
     return isFinite(n) ? n : 0;
   }
+  /* 소수점 셋째 자리에서 반올림해 둘째 자리까지 남긴다.
+     n * 100 후 Math.round만 쓰면 85.005 같은 값이 2진 오차(85.00499…)로 85.00이 되므로,
+     지수 표기 문자열로 100배 키운 뒤 반올림해 경계값(.xx5)도 위로 올린다. */
+  function round2(n){
+    if(n === null || n === undefined || !isFinite(n)) return n;
+    var neg = n < 0;
+    var v = Number(Math.abs(n) + 'e2');
+    if(!isFinite(v)) return Math.round(n * 100) / 100;
+    v = Math.round(v) / 100;
+    return neg && v !== 0 ? -v : v;
+  }
   function fmt(n){
     if(n === null || n === undefined || !isFinite(n)) return '–';
-    var v = Math.abs(n) < 0.0001 ? 0 : n;
+    var v = round2(n);
+    if(v === 0) v = 0;
     return v.toFixed(2);
   }
   function signed(n){
     if(n === null || n === undefined || !isFinite(n)) return '–';
-    var v = Math.abs(n) < 0.0001 ? 0 : n;
+    var v = round2(n);
+    if(v === 0) v = 0;
     return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(2);
   }
   function gradeName(score){
@@ -794,7 +807,7 @@
       el.addEventListener('blur', function(){
         if(el.value === '' || el.value === '-') return;
         var n = numOf(el.value);
-        el.value = (Math.round(n * 100) / 100).toString();
+        el.value = String(round2(n));
         state[field][key] = el.value;
         sync();
         save();
@@ -823,8 +836,8 @@
 
     KEYS.forEach(function(key){
       var g = state.grade[key];
-      var b = numOf(state.bonus[key]);
-      var p = Math.abs(numOf(state.penalty[key]));
+      var b = round2(numOf(state.bonus[key]));
+      var p = round2(Math.abs(numOf(state.penalty[key])));
       var adj = null;
       if(typeof g === 'number'){
         adj = g + b - p;
@@ -841,15 +854,17 @@
 
     /* 성과: 반기별 조정점수(등급 + 포상 − 징계)의 산술평균
        역량수준평가: 고른 등급의 산술평균 (포상·징계 미반영) */
-    var perfAvg = count ? adjSum / count : null;
-    var compAvg = count ? gradeSum / count : null;
-    var dev = numOf(state.dev);
-    var target = (state.target === '' || state.target === '-') ? null : numOf(state.target);
+    var perfAvg = count ? round2(adjSum / count) : null;
+    var compAvg = count ? round2(gradeSum / count) : null;
+    /* 입력값도 둘째 자리로 맞춰, 화면에 보이는 숫자 그대로 계산되게 한다. */
+    var dev = round2(numOf(state.dev));
+    var target = (state.target === '' || state.target === '-') ? null : round2(numOf(state.target));
 
-    var perfScore = perfAvg;
-    var compScore = compAvg === null ? null : (compAvg * 0.9 + dev * 0.1);
+    /* 중간 점수도 둘째 자리로 반올림한 값을 그대로 다음 계산에 넘긴다. */
+    var perfScore = perfAvg === null ? null : round2(perfAvg);
+    var compScore = compAvg === null ? null : round2(compAvg * 0.9 + dev * 0.1);
     var final = (perfScore !== null && compScore !== null)
-      ? perfScore * (r.perf / 100) + compScore * (r.comp / 100)
+      ? round2(perfScore * (r.perf / 100) + compScore * (r.comp / 100))
       : null;
 
     return {
@@ -932,12 +947,12 @@
     goalChip.className = 'goal';
     dockDiff.className = 'dock-r';
     if(d.target !== null && d.final !== null){
-      var diff = d.final - d.target;
-      goalChip.textContent = Math.abs(diff) < 0.005
+      var diff = round2(d.final - d.target);
+      goalChip.textContent = diff === 0
         ? '목표와 동일'
         : (diff > 0 ? '목표보다 +' + fmt(diff) + '점' : '목표까지 −' + fmt(Math.abs(diff)) + '점');
       goalChip.classList.add(diff >= 0 ? 'up' : 'down');
-      dockDiff.textContent = '목표 ' + fmt(d.target) + ' · ' + (Math.abs(diff) < 0.005 ? '±0.00' : signed(diff));
+      dockDiff.textContent = '목표 ' + fmt(d.target) + ' · ' + (diff === 0 ? '±0.00' : signed(diff));
       dockDiff.classList.add(diff >= 0 ? 'up' : 'down');
     }else{
       goalChip.textContent = '';
@@ -959,7 +974,7 @@
     el.addEventListener('blur', function(){
       if(el.value === '' || el.value === '-') return;
       var n = numOf(el.value);
-      el.value = (Math.round(n * 100) / 100).toString();
+      el.value = String(round2(n));
       state[id] = el.value;
       sync();
       save();
