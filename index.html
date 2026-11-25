@@ -73,7 +73,7 @@
   }
   .goal.up{color:var(--sage-deep);}
   .goal.down{color:var(--clay);}
-  .fill-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);}
+  .fill-note{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);}
 
   .parts{margin-top:14px;display:grid;gap:8px;}
   .part{background:var(--soft);border-radius:14px;padding:11px 12px;}
@@ -104,6 +104,19 @@
   .seg button[aria-pressed="true"] small{color:rgba(255,255,255,.82);}
   .seg button:active{transform:scale(.985);}
 
+  /* ---------- groups ---------- */
+  .group{margin-top:18px;}
+  .group:first-of-type{margin-top:0;}
+  .group-head{display:flex;align-items:center;gap:8px;}
+  .group-title{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-0.01em;}
+  .group-tag{
+    margin-left:auto;font-size:11px;font-weight:700;color:var(--sage-deep);
+    background:var(--sage-soft);border-radius:999px;padding:4px 8px;white-space:nowrap;letter-spacing:0;
+  }
+  .group-tag.prior{color:var(--clay);background:var(--clay-soft);}
+  .group-note{margin:4px 0 0;font-size:11.5px;line-height:1.5;color:var(--muted);}
+  .group-note b{color:var(--ink-soft);font-weight:600;}
+
   /* ---------- grades ---------- */
   .legend{
     display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 14px;
@@ -116,11 +129,21 @@
     margin:16px 0 7px;
   }
   .year-head:first-child{margin-top:0;}
+  .year-head.prior{color:var(--clay);}
   .period{
     background:var(--soft);border-radius:14px;padding:11px 12px 12px;margin-bottom:7px;
   }
   .period-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;}
   .period-title{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;}
+  .period-meta{display:flex;align-items:center;gap:8px;margin-top:5px;}
+  .scope{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0;}
+  .scope b{color:var(--ink-soft);font-weight:700;}
+  .period-del{
+    margin-left:auto;flex:0 0 auto;font-family:inherit;font-size:11px;font-weight:700;
+    color:var(--clay);background:#FFF;border:1px solid rgba(168,91,62,.25);
+    border-radius:8px;padding:6px 10px;cursor:pointer;appearance:none;letter-spacing:0;
+  }
+  .period-del:active{transform:scale(.97);}
   .grade-row{margin-top:12px;}
   .grade-label{
     display:flex;align-items:center;gap:5px;
@@ -165,6 +188,19 @@
   }
   .period-pill.empty{color:var(--muted);background:rgba(47,42,37,.05);}
   .period-pill.pending{color:var(--clay);background:var(--clay-soft);}
+
+  /* ---------- add / empty prior ---------- */
+  .add-period{
+    width:100%;margin-top:2px;font-family:inherit;font-size:13px;font-weight:700;
+    color:var(--sage-deep);background:#FFF;border:1px dashed rgba(92,122,103,.45);
+    border-radius:12px;padding:12px 10px;cursor:pointer;appearance:none;letter-spacing:-0.01em;
+  }
+  .add-period:active{transform:scale(.995);}
+  .prior-empty{
+    padding:13px 12px;border-radius:12px;background:var(--soft);
+    font-size:12px;line-height:1.5;color:var(--muted);text-align:center;
+  }
+  .prior-empty b{color:var(--ink-soft);font-weight:600;}
 
   /* ---------- single number field ---------- */
   .field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;}
@@ -285,6 +321,8 @@
     .card{padding:14px;border-radius:18px;}
     .period{padding:10px 10px 11px;}
     .mini-inp{height:38px;}
+    .period-title{font-size:13px;}
+    .period-pill{font-size:11px;padding:3px 7px;}
   }
   @media (max-width:381px){
     .dock{gap:0;}
@@ -293,6 +331,7 @@
     .dock-r{font-size:11px;}
     .dock-save{padding:0 11px;font-size:12px;height:36px;}
     .btn-save{padding:0 13px;font-size:13.5px;}
+    .period-top{gap:6px;}
   }
   @media (min-width:560px){
     .parts{grid-template-columns:1fr 1fr;}
@@ -303,7 +342,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">4개년 상·하반기 · 동일 가중치</div>
+    <div class="eyebrow" id="eyebrow">L2·L3 · 최근 3개년 60% + 그 외 40%</div>
     <h1>승진 점수 계산표</h1>
     <p>등급·포상·징계만 넣으면 끝나요.</p>
   </header>
@@ -353,6 +392,7 @@
     <p class="hint">반기마다 등급 1개만 고르면, 그 점수가 <b>성과역량</b>과 <b>역량수준평가</b>에 똑같이 들어가요.<br>
       고른 등급을 한 번 더 누르면 지워지고, 비어 있는 기간은 평균에서 빠져요.<br>
       <b>조정 성과점수</b>는 그 기간의 <b>등급 + 포상 − 징계</b>예요. (예: 양호 85 + 표창 5 = 90)</p>
+    <p class="hint" id="periodRuleHint">L2 · 성과는 최근 3개년 60% + 그 외 40%, 역량은 최근 4개년 평균이에요.</p>
     <p class="hint warn" id="orphanNote" hidden>등급 없이 포상·징계만 넣은 기간은 계산에서 빠져요.</p>
   </section>
 
@@ -428,18 +468,47 @@
     {id:'L2', perf:50, comp:50},
     {id:'L3', perf:70, comp:30}
   ];
-  var YEARS = [1,2,3,4];
-  var TERMS = [['상반기','h1'],['하반기','h2']];
-  var KEYS = [];
-  YEARS.forEach(function(y){ TERMS.forEach(function(t){ KEYS.push('y' + y + t[1]); }); });
+  /* 최근 3개년 6반기 */
+  var RECENT = ['y1h1','y1h2','y2h1','y2h2','y3h1','y3h2'];
+  /* 최근 4개년 8반기 */
+  var FOUR = RECENT.concat(['y4h1','y4h2']);
+  var KEY_RE = /^y(\d{1,2})h([12])$/;
+  var MAX_YEAR = 30; /* 이전 기간은 최대 26년치까지 추가 가능 */
 
   var KEY = 'promotion-score-calculator.v2';
-  var DEFAULTS = {rank:'L2', grade:{}, bonus:{}, penalty:{}, dev:'', target:''};
+  var HIST_KEY = 'promotion-score-calculator.history.v1';
+  var HIST_MAX = 50;
+  var DEFAULTS = {
+    rank:'L2',
+    grade:{}, bonus:{}, penalty:{},
+    priorKeys:['y4h1','y4h2'],
+    dev:'', target:''
+  };
 
   var state = load();
 
   /* ---------- helpers ---------- */
   function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function isBase(rankId){ return rankId === 'L0' || rankId === 'L1'; }
+  function keyYear(key){
+    var m = KEY_RE.exec(String(key || ''));
+    return m ? parseInt(m[1], 10) : 0;
+  }
+  function keyTerm(key){
+    var m = KEY_RE.exec(String(key || ''));
+    return m ? m[2] : '';
+  }
+  function keyOrder(a, b){
+    return (keyYear(a) - keyYear(b)) || (keyTerm(a) < keyTerm(b) ? -1 : keyTerm(a) > keyTerm(b) ? 1 : 0);
+  }
+  /* 기간 이름: 최근 1~3년차는 '최근', 4년차부터는 '이전' (L0·L1은 4년차도 '최근') */
+  function periodLabel(key, baseMode){
+    var y = keyYear(key), h = keyTerm(key);
+    if(!y) return String(key);
+    var term = h === '1' ? '상반기' : '하반기';
+    if(baseMode || y <= 3) return '최근 ' + y + '년차 ' + term;
+    return '이전 ' + (y - 3) + '년차 ' + term;
+  }
   function numOf(v){
     if(v === null || v === undefined) return 0;
     var s = String(v).replace(/[^0-9.\-]/g,'').trim();
@@ -449,11 +518,13 @@
   }
   /* 소수점 셋째 자리에서 반올림해 둘째 자리까지 남긴다.
      n * 100 후 Math.round만 쓰면 85.005 같은 값이 2진 오차(85.00499…)로 85.00이 되므로,
-     지수 표기 문자열로 100배 키운 뒤 반올림해 경계값(.xx5)도 위로 올린다. */
+     먼저 소수 10자리로 다듬어 2진 오차를 없앤 뒤 100배 해서 반올림한다.
+     (예: 82.54499999999999 → 82.545 → 82.55) */
   function round2(n){
     if(n === null || n === undefined || !isFinite(n)) return n;
     var neg = n < 0;
-    var v = Number(Math.abs(n) + 'e2');
+    var s = Math.abs(n).toFixed(10);
+    var v = Number(s + 'e2');
     if(!isFinite(v)) return Math.round(n * 100) / 100;
     v = Math.round(v) / 100;
     return neg && v !== 0 ? -v : v;
@@ -485,6 +556,20 @@
     for(var i = 0; i < RANKS.length; i++){ if(RANKS[i].id === id) return RANKS[i]; }
     return RANKS[2];
   }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad2(n){ return n < 10 ? '0' + n : String(n); }
+  function sortKeys(keys){
+    var out = [];
+    keys.forEach(function(k){
+      if(KEY_RE.test(String(k)) && out.indexOf(k) < 0) out.push(k);
+    });
+    out.sort(keyOrder);
+    return out;
+  }
 
   /* ---------- storage ---------- */
   function load(){
@@ -497,7 +582,7 @@
           if(typeof p.rank === 'string' && rankOf(p.rank).id === p.rank) s.rank = p.rank;
           if(p.grade && typeof p.grade === 'object'){
             for(var gk in p.grade){
-              if(p.grade.hasOwnProperty(gk) && KEYS.indexOf(gk) > -1){
+              if(p.grade.hasOwnProperty(gk) && KEY_RE.test(gk)){
                 var gv = Number(p.grade[gk]);
                 if(GRADE_SCORES.indexOf(gv) > -1) s.grade[gk] = gv;
               }
@@ -507,7 +592,7 @@
             ['perf','comp'].forEach(function(k){
               if(p[k] && typeof p[k] === 'object'){
                 for(var key in p[k]){
-                  if(p[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1 && s.grade[key] === undefined){
+                  if(p[k].hasOwnProperty(key) && KEY_RE.test(key) && s.grade[key] === undefined){
                     var pv = Number(p[k][key]);
                     if(GRADE_SCORES.indexOf(pv) > -1) s.grade[key] = pv;
                   }
@@ -518,13 +603,16 @@
           ['bonus','penalty'].forEach(function(k){
             if(p[k] && typeof p[k] === 'object'){
               for(var key in p[k]){
-                if(p[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1) s[k][key] = p[k][key];
+                if(p[k].hasOwnProperty(key) && KEY_RE.test(key)) s[k][key] = p[k][key];
               }
             }
           });
           ['dev','target'].forEach(function(k){
             if(typeof p[k] === 'string' || typeof p[k] === 'number') s[k] = String(p[k]);
           });
+          if(Object.prototype.toString.call(p.priorKeys) === '[object Array]'){
+            s.priorKeys = sortKeys(p.priorKeys.map(String));
+          }
         }
       }
     }catch(e){}
@@ -534,17 +622,9 @@
     try{ window.localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
   }
 
-  /* ---------- history (기록 저장·조회·불러오기) ---------- */
-  var HIST_KEY = 'promotion-score-calculator.history.v1';
-  var HIST_MAX = 50;
+  /* ---------- history ---------- */
   var history = loadHistory();
 
-  function esc(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-  function pad2(n){ return n < 10 ? '0' + n : String(n); }
   function fmtDate(ts){
     var d = new Date(ts);
     return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate()) +
@@ -568,12 +648,13 @@
       rank: rankOf(it.rank).id,
       dev: (it.dev === undefined || it.dev === null) ? '' : String(it.dev),
       target: (it.target === undefined || it.target === null) ? '' : String(it.target),
+      priorKeys: ['y4h1','y4h2'],
       grade: {}, bonus: {}, penalty: {}
     };
     /* 새 구조는 반기당 등급 1개. 예전 이력(성과·역량 따로)은 있는 쪽 등급을 쓴다. */
     if(it.grade && typeof it.grade === 'object'){
       for(var gk in it.grade){
-        if(it.grade.hasOwnProperty(gk) && KEYS.indexOf(gk) > -1){
+        if(it.grade.hasOwnProperty(gk) && KEY_RE.test(gk)){
           var gv = Number(it.grade[gk]);
           if(isFinite(gv) && GRADE_SCORES.indexOf(gv) > -1) rec.grade[gk] = gv;
         }
@@ -582,7 +663,7 @@
       ['perf','comp'].forEach(function(k){
         if(it[k] && typeof it[k] === 'object'){
           for(var key in it[k]){
-            if(it[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1 && rec.grade[key] === undefined){
+            if(it[k].hasOwnProperty(key) && KEY_RE.test(key) && rec.grade[key] === undefined){
               var hv = Number(it[k][key]);
               if(isFinite(hv) && GRADE_SCORES.indexOf(hv) > -1) rec.grade[key] = hv;
             }
@@ -593,7 +674,7 @@
     ['bonus','penalty'].forEach(function(k){
       if(it[k] && typeof it[k] === 'object'){
         for(var key in it[k]){
-          if(it[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1){
+          if(it[k].hasOwnProperty(key) && KEY_RE.test(key)){
             var v = it[k][key];
             if(v === undefined || v === null || v === '') continue;
             rec[k][key] = String(v);
@@ -601,6 +682,15 @@
         }
       }
     });
+    /* 가변 기간: 새 이력은 priorKeys를 그대로, 예전 이력은 4년차 2반기를 기본으로 */
+    if(Object.prototype.toString.call(it.priorKeys) === '[object Array]'){
+      rec.priorKeys = sortKeys(it.priorKeys.map(String));
+    }else{
+      rec.priorKeys = ['y4h1','y4h2'].filter(function(k){
+        return rec.grade[k] !== undefined || rec.bonus[k] !== undefined || rec.penalty[k] !== undefined;
+      });
+      if(!rec.priorKeys.length) rec.priorKeys = ['y4h1','y4h2'];
+    }
     ['perfScore','compScore','final'].forEach(function(k){
       rec[k] = (typeof it[k] === 'number' && isFinite(it[k])) ? it[k] : null;
     });
@@ -636,9 +726,11 @@
       dev: state.dev === undefined ? '' : String(state.dev),
       target: state.target === undefined ? '' : String(state.target),
       perfScore: d.perfScore, compScore: d.compScore, final: d.final,
+      priorKeys: state.priorKeys.slice(),
       grade: {}, bonus: {}, penalty: {}
     };
-    KEYS.forEach(function(key){
+    var keys = sortKeys(FOUR.concat(state.priorKeys));
+    keys.forEach(function(key){
       if(typeof state.grade[key] === 'number') rec.grade[key] = state.grade[key];
       if(state.bonus[key] !== undefined && state.bonus[key] !== '') rec.bonus[key] = String(state.bonus[key]);
       if(state.penalty[key] !== undefined && state.penalty[key] !== '') rec.penalty[key] = String(state.penalty[key]);
@@ -670,13 +762,15 @@
     if(!rec) return;
     state = clone(DEFAULTS);
     state.rank = rankOf(rec.rank).id;
-    KEYS.forEach(function(key){
+    state.priorKeys = rec.priorKeys.slice();
+    sortKeys(FOUR.concat(state.priorKeys)).forEach(function(key){
       if(typeof rec.grade[key] === 'number') state.grade[key] = rec.grade[key];
       if(rec.bonus[key] !== undefined) state.bonus[key] = rec.bonus[key];
       if(rec.penalty[key] !== undefined) state.penalty[key] = rec.penalty[key];
     });
     state.dev = rec.dev;
     state.target = rec.target;
+    buildPeriods();
     paintInputs();
     sync();
     save();
@@ -725,152 +819,263 @@
     host.innerHTML = buf.join('');
   }
 
+  /* ---------- build periods ---------- */
+  var periodsHost = document.getElementById('periods');
+
+  function chipSet(key, label){
+    var out = '';
+    for(var i = 0; i < GRADES.length; i++){
+      out += '<button type="button" class="chip"' +
+        ' data-key="' + key + '" data-score="' + GRADES[i][1] + '"' +
+        ' aria-pressed="false" aria-label="' + esc(label) + ' ' + GRADES[i][0] + ' ' + GRADES[i][1] + '점">' +
+        GRADES[i][0] + '</button>';
+    }
+    return out;
+  }
+  function periodCard(key, label, opts){
+    opts = opts || {};
+    var pillId = 'adj-' + key;
+    return '<div class="period" data-key="' + key + '">' +
+      '<div class="period-top">' +
+        '<span class="period-title">' + esc(label) + '</span>' +
+        '<span class="period-pill empty" id="' + pillId + '">조정 –</span>' +
+      '</div>' +
+      (opts.scope || opts.del
+        ? '<div class="period-meta">' +
+            (opts.scope ? '<span class="scope">' + opts.scope + '</span>' : '') +
+            (opts.del ? '<button type="button" class="period-del" data-del="' + key + '" aria-label="' + esc(label) + ' 삭제">삭제</button>' : '') +
+          '</div>'
+        : '') +
+      '<div class="grade-row">' +
+        '<div class="grade-label">평가 등급</div>' +
+        '<div class="grades" role="group" aria-label="' + esc(label) + ' 평가 등급">' +
+          chipSet(key, label) +
+        '</div>' +
+      '</div>' +
+      '<div class="adj-row">' +
+        '<div class="mini">' +
+          '<label class="mini-l plus" for="b-' + key + '">포상 <b>+</b></label>' +
+          '<div class="mini-inp"><input id="b-' + key + '" type="text" inputmode="decimal" ' +
+            'autocomplete="off" placeholder="0" data-adj="bonus" data-key="' + key + '" ' +
+            'aria-label="' + esc(label) + ' 포상점수"></div>' +
+        '</div>' +
+        '<div class="mini">' +
+          '<label class="mini-l minus" for="p-' + key + '">징계 <b>−</b></label>' +
+          '<div class="mini-inp"><input id="p-' + key + '" type="text" inputmode="decimal" ' +
+            'autocomplete="off" placeholder="0" data-adj="penalty" data-key="' + key + '" ' +
+            'aria-label="' + esc(label) + ' 징계점수"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function buildPeriods(){
+    var r = rankOf(state.rank);
+    var base = isBase(r.id);
+    var buf = [];
+
+    if(base){
+      buf.push('<div class="group">');
+      buf.push('<div class="group-head"><span class="group-title">최근 4개년</span><span class="group-tag">8반기 동일 가중치</span></div>');
+      buf.push('<p class="group-note">최근 1년차가 가장 최근 1년이에요. 성과·역량 모두 <b>8반기 평균</b>으로 들어가요.</p>');
+      [1,2,3,4].forEach(function(y){
+        buf.push('<div class="year-head">최근 ' + y + '년차</div>');
+        ['1','2'].forEach(function(h){
+          var key = 'y' + y + 'h' + h;
+          buf.push(periodCard(key, periodLabel(key, true), {}));
+        });
+      });
+      buf.push('</div>');
+    }else{
+      /* 최근 3개년 */
+      buf.push('<div class="group">');
+      buf.push('<div class="group-head"><span class="group-title">최근 3개년</span><span class="group-tag">성과 60%</span></div>');
+      buf.push('<p class="group-note">성과는 이 6반기가 <b>60%</b>, 역량수준평가는 ' +
+        (r.id === 'L2' ? '여기에 4년차 2반기까지 더해 평균 내요.' : '이 6반기만 봐요.') + '</p>');
+      [1,2,3].forEach(function(y){
+        buf.push('<div class="year-head">최근 ' + y + '년차</div>');
+        ['1','2'].forEach(function(h){
+          var key = 'y' + y + 'h' + h;
+          buf.push(periodCard(key, periodLabel(key, false), {}));
+        });
+      });
+      buf.push('</div>');
+
+      /* 그 외 이전 기간 */
+      var keys = state.priorKeys;
+      buf.push('<div class="group" id="priorGroup">');
+      buf.push('<div class="group-head"><span class="group-title">그 외 이전 기간</span><span class="group-tag prior">성과 40% · ' + keys.length + '반기</span></div>');
+      buf.push('<p class="group-note">' +
+        (r.id === 'L2'
+          ? '최근 4년차(이전 1년차 2반기)는 <b>성과+역량</b>에, 5년차부터는 <b>성과에만</b> 들어가요.'
+          : '이전 기간은 모두 <b>성과에만</b> 들어가요.') +
+        ' 재직 기간에 맞게 반기를 더하거나 뺄 수 있어요.</p>');
+
+      if(!keys.length){
+        buf.push('<div class="prior-empty">이전 기간이 <b>0반기</b>예요.<br>최근 3개년만으로 계산되고, 필요하면 아래에서 반기를 더할 수 있어요.</div>');
+      }else{
+        var lastYear = 0;
+        keys.forEach(function(key){
+          var y = keyYear(key);
+          if(y !== lastYear){
+            var head = (y === 4)
+              ? (r.id === 'L2' ? '최근 4년차 (이전 1년차)' : '이전 1년차')
+              : '이전 ' + (y - 3) + '년차';
+            buf.push('<div class="year-head prior">' + head + '</div>');
+            lastYear = y;
+          }
+          var scope;
+          if(r.id === 'L3') scope = '성과 40%만';
+          else scope = (y <= 4) ? '성과 40% + <b>역량</b>' : '성과 40%만';
+          buf.push(periodCard(key, periodLabel(key, false), {scope: scope, del: true}));
+        });
+      }
+      buf.push('<button type="button" class="add-period" id="addPeriod">+ 반기 추가</button>');
+      buf.push('</div>');
+    }
+
+    periodsHost.innerHTML = buf.join('');
+    paintInputs();
+  }
+
   function paintInputs(){
-    miniInputs.forEach(function(el){
+    var inputs = periodsHost.querySelectorAll('input[data-adj]');
+    for(var i = 0; i < inputs.length; i++){
+      var el = inputs[i];
       var field = el.getAttribute('data-adj');
       var key = el.getAttribute('data-key');
       var v = state[field][key];
       el.value = (v === undefined || v === null || v === '') ? '' : String(v);
-    });
+    }
     var devEl = document.getElementById('dev');
     var tgtEl = document.getElementById('target');
     if(devEl) devEl.value = (state.dev === '' || state.dev === undefined) ? '' : String(state.dev);
     if(tgtEl) tgtEl.value = (state.target === '' || state.target === undefined) ? '' : String(state.target);
   }
 
-  /* ---------- build periods ---------- */
-  var chips = [];
-  var miniInputs = [];
-  function buildPeriods(){
-    var host = document.getElementById('periods');
-    var buf = [];
-    YEARS.forEach(function(y){
-      buf.push('<div class="year-head">' + y + '년차</div>');
-      TERMS.forEach(function(t){
-        var key = 'y' + y + t[1];
-        var name = y + '년차 ' + t[0];
-        buf.push(
-          '<div class="period" data-key="' + key + '">' +
-            '<div class="period-top">' +
-              '<span class="period-title">' + name + '</span>' +
-              '<span class="period-pill" id="adj-' + key + '">조정 –</span>' +
-            '</div>' +
-            '<div class="grade-row">' +
-              '<div class="grade-label">평가 등급</div>' +
-              '<div class="grades" role="group" aria-label="' + name + ' 평가 등급">' +
-                gradeButtons(key, name) +
-              '</div>' +
-            '</div>' +
-            '<div class="adj-row">' +
-              '<div class="mini">' +
-                '<label class="mini-l plus" for="b-' + key + '">포상 <b>+</b></label>' +
-                '<div class="mini-inp"><input id="b-' + key + '" type="text" inputmode="decimal" ' +
-                  'autocomplete="off" placeholder="0" data-adj="bonus" data-key="' + key + '" ' +
-                  'aria-label="' + name + ' 포상점수"></div>' +
-              '</div>' +
-              '<div class="mini">' +
-                '<label class="mini-l minus" for="p-' + key + '">징계 <b>−</b></label>' +
-                '<div class="mini-inp"><input id="p-' + key + '" type="text" inputmode="decimal" ' +
-                  'autocomplete="off" placeholder="0" data-adj="penalty" data-key="' + key + '" ' +
-                  'aria-label="' + name + ' 징계점수"></div>' +
-              '</div>' +
-            '</div>' +
-          '</div>'
-        );
-      });
-    });
-    host.innerHTML = buf.join('');
-
-    chips = Array.prototype.slice.call(host.querySelectorAll('.chip'));
-    chips.forEach(function(b){
-      b.addEventListener('click', function(){
-        var key = b.getAttribute('data-key');
-        var score = parseInt(b.getAttribute('data-score'), 10);
-        if(state.grade[key] === score){ delete state.grade[key]; } else { state.grade[key] = score; }
-        sync();
-        save();
-      });
-    });
-
-    miniInputs = Array.prototype.slice.call(host.querySelectorAll('input[data-adj]'));
-    miniInputs.forEach(function(el){
-      var field = el.getAttribute('data-adj');
-      var key = el.getAttribute('data-key');
-      el.value = state[field][key] === undefined || state[field][key] === '' ? '' : String(state[field][key]);
-      el.addEventListener('input', function(){
-        var v = sanitize(el.value);
-        if(el.value !== v) el.value = v;
-        state[field][key] = v;
-        sync();
-        save();
-      });
-      el.addEventListener('blur', function(){
-        if(el.value === '' || el.value === '-') return;
-        var n = numOf(el.value);
-        el.value = String(round2(n));
-        state[field][key] = el.value;
-        sync();
-        save();
-      });
-    });
-  }
-  function gradeButtons(key, label){
-    var out = '';
-    for(var i = 0; i < GRADES.length; i++){
-      out += '<button type="button" class="chip"' +
-        ' data-key="' + key + '" data-score="' + GRADES[i][1] + '"' +
-        ' aria-pressed="false" aria-label="' + label + ' ' + GRADES[i][0] + ' ' + GRADES[i][1] + '점">' +
-        GRADES[i][0] + '</button>';
+  /* ---------- prior period add / delete ---------- */
+  function nextPriorKey(){
+    for(var y = 4; y <= MAX_YEAR; y++){
+      for(var h = 1; h <= 2; h++){
+        var key = 'y' + y + 'h' + h;
+        if(state.priorKeys.indexOf(key) < 0) return key;
+      }
     }
-    return out;
+    return null;
+  }
+  function addPrior(){
+    var key = nextPriorKey();
+    if(!key){ toast('더 이상 추가할 수 없어요'); return; }
+    state.priorKeys = sortKeys(state.priorKeys.concat([key]));
+    save();
+    buildPeriods();
+    sync();
+    toast(periodLabel(key, false) + ' 반기를 더했어요');
+    var el = periodsHost.querySelector('.period[data-key="' + key + '"]');
+    if(el && el.scrollIntoView){
+      try{ el.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){}
+    }
+  }
+  function removePrior(key){
+    var hasData = (typeof state.grade[key] === 'number') ||
+      (state.bonus[key] !== undefined && state.bonus[key] !== '') ||
+      (state.penalty[key] !== undefined && state.penalty[key] !== '');
+    var label = periodLabel(key, false);
+    if(hasData && !window.confirm(label + '에 넣은 등급·포상·징계를 지우고 계산에서 뺄까요?')) return;
+    var next = [];
+    state.priorKeys.forEach(function(k){ if(k !== key) next.push(k); });
+    state.priorKeys = next;
+    delete state.grade[key];
+    delete state.bonus[key];
+    delete state.penalty[key];
+    save();
+    buildPeriods();
+    sync();
+    toast(label + ' 반기를 뺐어요');
   }
 
   /* ---------- compute ---------- */
-  function calc(){
-    var r = rankOf(state.rank);
-
-    var adjSum = 0, gradeSum = 0, count = 0;
-    var bonusSum = 0, penaltySum = 0;
-    var orphan = false;
-    var rows = [];
-
-    KEYS.forEach(function(key){
+  function stats(keys){
+    var adjSum = 0, gradeSum = 0, n = 0, bonusSum = 0, penaltySum = 0;
+    keys.forEach(function(key){
       var g = state.grade[key];
       var b = round2(numOf(state.bonus[key]));
       var p = round2(Math.abs(numOf(state.penalty[key])));
-      var adj = null;
       if(typeof g === 'number'){
-        adj = g + b - p;
-        adjSum += adj;
+        adjSum += g + b - p;
         gradeSum += g;
-        count++;
         bonusSum += b;
         penaltySum += p;
-      }else if(b !== 0 || p !== 0){
-        orphan = true;
+        n++;
       }
-      rows.push({key:key, grade:typeof g === 'number' ? g : null, bonus:b, penalty:p, adj:adj});
     });
+    return {
+      n:n,
+      perf:n ? round2(adjSum / n) : null,
+      comp:n ? round2(gradeSum / n) : null,
+      bonusSum:round2(bonusSum),
+      penaltySum:round2(penaltySum)
+    };
+  }
 
-    /* 성과: 반기별 조정점수(등급 + 포상 − 징계)의 산술평균
-       역량수준평가: 고른 등급의 산술평균 (포상·징계 미반영) */
-    var perfAvg = count ? round2(adjSum / count) : null;
-    var compAvg = count ? round2(gradeSum / count) : null;
+  function calc(){
+    var r = rankOf(state.rank);
+    var base = isBase(r.id);
+
+    var perfKeys = base ? FOUR.slice() : RECENT.concat(state.priorKeys);
+    var compKeys;
+    if(base){
+      compKeys = FOUR.slice();
+    }else if(r.id === 'L2'){
+      /* 최근 4개년(8반기) = 최근 6반기 + 이전 기간 중 4년차 2반기 */
+      compKeys = RECENT.concat(state.priorKeys.filter(function(k){ return keyYear(k) <= 4; }));
+    }else{
+      /* L3 역량은 최근 3개년만 */
+      compKeys = RECENT.slice();
+    }
+
+    var ps = stats(perfKeys);
+    var cs = stats(compKeys);
+    var recentS = base ? null : stats(RECENT);
+    var priorS = base ? null : stats(state.priorKeys);
+
+    var perfScore = null, perfNote = null;
+    if(base){
+      perfScore = ps.perf;
+    }else if(recentS.perf !== null && priorS.perf !== null){
+      perfScore = round2(recentS.perf * 0.6 + priorS.perf * 0.4);
+    }else if(recentS.perf !== null){
+      perfScore = recentS.perf;
+      perfNote = 'recent';
+    }else if(priorS.perf !== null){
+      perfScore = priorS.perf;
+      perfNote = 'prior';
+    }
+
     /* 입력값도 둘째 자리로 맞춰, 화면에 보이는 숫자 그대로 계산되게 한다. */
     var dev = round2(numOf(state.dev));
     var target = (state.target === '' || state.target === '-') ? null : round2(numOf(state.target));
 
-    /* 중간 점수도 둘째 자리로 반올림한 값을 그대로 다음 계산에 넘긴다. */
-    var perfScore = perfAvg === null ? null : round2(perfAvg);
+    var compAvg = cs.comp;
     var compScore = compAvg === null ? null : round2(compAvg * 0.9 + dev * 0.1);
     var final = (perfScore !== null && compScore !== null)
       ? round2(perfScore * (r.perf / 100) + compScore * (r.comp / 100))
       : null;
 
+    var orphan = false;
+    perfKeys.forEach(function(key){
+      if(typeof state.grade[key] !== 'number'){
+        if(round2(numOf(state.bonus[key])) !== 0 || round2(Math.abs(numOf(state.penalty[key]))) !== 0) orphan = true;
+      }
+    });
+
     return {
-      r:r, rows:rows, perfAvg:perfAvg, compAvg:compAvg,
-      count:count, bonusSum:bonusSum, penaltySum:penaltySum, orphan:orphan,
-      dev:dev, target:target, perfScore:perfScore, compScore:compScore, final:final
+      base:base, r:r, perfKeys:perfKeys, compKeys:compKeys,
+      ps:ps, cs:cs, recent:recentS, prior:priorS,
+      count:ps.n, total:perfKeys.length, compCount:cs.n, priorTotal:state.priorKeys.length,
+      bonusSum:ps.bonusSum, penaltySum:ps.penaltySum, orphan:orphan,
+      perfScore:perfScore, perfNote:perfNote, compAvg:compAvg, compScore:compScore,
+      dev:dev, target:target, final:final
     };
   }
 
@@ -882,34 +1087,56 @@
     for(var i = 0; i < segs.length; i++){
       segs[i].setAttribute('aria-pressed', segs[i].getAttribute('data-rank') === d.r.id ? 'true' : 'false');
     }
-    document.getElementById('rankHint').textContent = d.r.id + ' · 성과 ' + d.r.perf + '% + 역량 ' + d.r.comp + '%로 계산돼요.';
+
+    document.getElementById('eyebrow').textContent = d.base
+      ? 'L0·L1 · 최근 4개년 8반기 동일 가중치'
+      : 'L2·L3 · 최근 3개년 60% + 그 외 40%';
     document.getElementById('ratioBadge').textContent = d.r.id + ' · 성과 ' + d.r.perf + '% / 역량 ' + d.r.comp + '%';
 
-    for(var j = 0; j < chips.length; j++){
-      var bEl = chips[j];
-      var key = bEl.getAttribute('data-key');
-      var score = parseInt(bEl.getAttribute('data-score'), 10);
-      bEl.setAttribute('aria-pressed', state.grade[key] === score ? 'true' : 'false');
+    var rankHint;
+    if(d.base){
+      rankHint = d.r.id + ' · 성과 ' + d.r.perf + '% + 역량 ' + d.r.comp + '% · 최근 4개년 8반기 동일 가중치로 계산돼요.';
+    }else{
+      rankHint = d.r.id + ' · 성과 ' + d.r.perf + '% + 역량 ' + d.r.comp + '% · 성과는 최근 3개년 60% + 그 외 40%, 역량은 ' +
+        (d.r.id === 'L2' ? '최근 4개년' : '최근 3개년') + ' 평균이에요.';
     }
+    document.getElementById('rankHint').textContent = rankHint;
 
-    d.rows.forEach(function(row){
-      var pill = document.getElementById('adj-' + row.key);
+    document.getElementById('periodRuleHint').textContent = d.base
+      ? 'L0·L1은 최근 4개년 8반기를 똑같이 평균 내요. L2·L3로 바꾸면 기간 가중치가 적용돼요.'
+      : 'L2·L3는 성과가 최근 3개년 60% + 그 외 이전 기간 40%, 역량은 ' +
+        (d.r.id === 'L2' ? '최근 4개년(8반기) 평균' : '최근 3개년(6반기) 평균') + '이에요.';
+
+    var pEls = periodsHost.querySelectorAll('.period');
+    for(var j = 0; j < pEls.length; j++){
+      var el = pEls[j];
+      var key = el.getAttribute('data-key');
+      var g = state.grade[key];
+      var b = round2(numOf(state.bonus[key]));
+      var p = round2(Math.abs(numOf(state.penalty[key])));
+      var adj = typeof g === 'number' ? round2(g + b - p) : null;
+      var pill = document.getElementById('adj-' + key);
       if(pill){
-        if(row.adj === null){
-          pill.className = 'period-pill' + ((row.bonus || row.penalty) ? ' pending' : ' empty');
+        if(adj === null){
+          pill.className = 'period-pill' + ((b || p) ? ' pending' : ' empty');
           pill.textContent = '조정 –';
         }else{
           pill.className = 'period-pill';
-          pill.textContent = '조정 ' + fmt(row.adj);
+          pill.textContent = '조정 ' + fmt(adj);
         }
         pill.setAttribute('aria-label',
-          (row.grade !== null ? '등급 ' + gradeName(row.grade) + ' ' + row.grade : '등급 미입력') +
-          ' + 포상 ' + fmt(row.bonus) + ' − 징계 ' + fmt(row.penalty) +
-          (row.adj !== null ? ' = 조정 ' + fmt(row.adj) : ''));
+          (typeof g === 'number' ? '등급 ' + gradeName(g) + ' ' + g : '등급 미입력') +
+          ' + 포상 ' + fmt(b) + ' − 징계 ' + fmt(p) +
+          (adj !== null ? ' = 조정 ' + fmt(adj) : ''));
       }
-    });
+      var chips = el.querySelectorAll('.chip');
+      for(var c = 0; c < chips.length; c++){
+        var score = parseInt(chips[c].getAttribute('data-score'), 10);
+        chips[c].setAttribute('aria-pressed', typeof g === 'number' && g === score ? 'true' : 'false');
+      }
+    }
 
-    document.getElementById('countNote').textContent = d.count + ' / 8 입력';
+    document.getElementById('countNote').textContent = d.count + ' / ' + d.total + ' 입력';
 
     var fEl = document.getElementById('finalScore');
     fEl.textContent = d.final === null ? '–' : fmt(d.final);
@@ -918,24 +1145,44 @@
 
     var note = document.getElementById('fillNote');
     if(d.final === null){
-      note.textContent = '반기별 평가 등급을 하나 이상 고르면 점수가 계산돼요.';
-    }else if(d.count < 8){
-      note.textContent = '입력한 기간만 평균에 넣었어요 (8개 중 ' + d.count + '개).';
+      if(d.perfScore !== null && !d.base){
+        note.textContent = '역량수준평가에 들어갈 ' + (d.r.id === 'L2' ? '최근 4개년' : '최근 3개년') + ' 등급이 비어 있어요.';
+      }else{
+        note.textContent = '반기별 평가 등급을 하나 이상 고르면 점수가 계산돼요.';
+      }
+    }else if(d.base){
+      note.textContent = d.count < 8
+        ? '입력한 기간만 평균에 넣었어요 (8개 중 ' + d.count + '개).'
+        : '8개 기간 모두 반영했어요.';
     }else{
-      note.textContent = '8개 기간 모두 반영했어요.';
+      note.textContent = '최근 3개년 ' + d.recent.n + '/6 · 그 외 ' + d.prior.n + '/' + d.priorTotal + ' 반영했어요.';
+      if(d.perfNote === 'recent') note.textContent += ' 그 외 이전 기간이 비어 있어 최근 3개년만 100%로 계산 중이에요.';
+      if(d.perfNote === 'prior') note.textContent += ' 최근 3개년이 비어 있어 그 외 이전 기간만 100%로 계산 중이에요.';
     }
 
     var orphanNote = document.getElementById('orphanNote');
     if(d.orphan){ orphanNote.removeAttribute('hidden'); } else { orphanNote.setAttribute('hidden',''); }
 
     document.getElementById('perfScore').textContent = d.perfScore === null ? '–' : fmt(d.perfScore);
-    document.getElementById('perfFormula').textContent = d.perfScore === null
-      ? '반기별 (등급 + 포상 − 징계) 평균'
-      : '조정점수 평균 · ' + d.count + '개 기간 · 포상 ' + fmt(d.bonusSum) + ' · 징계 ' + fmt(d.penaltySum);
+    var pf;
+    if(d.perfScore === null){
+      pf = d.base ? '반기별 (등급 + 포상 − 징계) 평균' : '최근3년 × 60% + 그 외 × 40%';
+    }else if(d.base){
+      pf = '최근 4개년 조정점수 평균 · ' + d.count + '개 기간 · 포상 ' + fmt(d.bonusSum) + ' · 징계 ' + fmt(d.penaltySum);
+    }else if(d.perfNote === 'recent'){
+      pf = '최근3년 ' + fmt(d.recent.perf) + ' × 100% · 그 외 비어 있음';
+    }else if(d.perfNote === 'prior'){
+      pf = '그 외 ' + fmt(d.prior.perf) + ' × 100% · 최근3년 비어 있음';
+    }else{
+      pf = '최근3년 ' + fmt(d.recent.perf) + ' × 60% + 그 외 ' + fmt(d.prior.perf) + ' × 40%';
+    }
+    document.getElementById('perfFormula').textContent = pf;
 
     document.getElementById('compScore').textContent = d.compScore === null ? '–' : fmt(d.compScore);
-    document.getElementById('compFormula').textContent =
-      '수준 ' + (d.compAvg === null ? '–' : fmt(d.compAvg)) + ' × 90% + 개발 ' + fmt(d.dev) + ' × 10%';
+    var scopeText = d.base ? '최근 4개년' : (d.r.id === 'L2' ? '최근 4개년' : '최근 3개년');
+    document.getElementById('compFormula').textContent = d.compAvg === null
+      ? scopeText + ' 평균 – × 90% + 개발 ' + fmt(d.dev) + ' × 10%'
+      : scopeText + ' ' + d.compCount + '반기 평균 ' + fmt(d.compAvg) + ' × 90% + 개발 ' + fmt(d.dev) + ' × 10%';
 
     document.getElementById('applyLine').innerHTML = d.final === null
       ? '등급을 입력하면 계산식이 여기에 보여요.'
@@ -992,19 +1239,38 @@
   }
   function summaryText(){
     var d = calc();
+    var base = d.base;
     var lines = ['승진 점수 계산 결과', '직급 ' + d.r.id + ' (성과 ' + d.r.perf + '% / 역량 ' + d.r.comp + '%)'];
-    d.rows.forEach(function(row){
-      if(row.grade === null) return;
-      var nm = row.key.charAt(1) + '년차 ' + (row.key.indexOf('h1') > -1 ? '상반기' : '하반기');
-      var parts = [];
-      parts.push('등급 ' + gradeName(row.grade) + ' ' + row.grade);
-      if(row.bonus) parts.push('포상 +' + fmt(row.bonus));
-      if(row.penalty) parts.push('징계 −' + fmt(row.penalty));
-      parts.push('조정 ' + fmt(row.adj));
-      lines.push(nm + ' · ' + parts.join(' · '));
+    lines.push('기간 기준 · ' + (base
+      ? '최근 4개년 8반기 동일 가중치'
+      : '성과 최근 3개년 60% + 그 외 40% / 역량 ' + (d.r.id === 'L2' ? '최근 4개년' : '최근 3개년')));
+    d.perfKeys.forEach(function(key){
+      var g = state.grade[key];
+      if(typeof g !== 'number') return;
+      var b = round2(numOf(state.bonus[key]));
+      var p = round2(Math.abs(numOf(state.penalty[key])));
+      var parts = ['등급 ' + gradeName(g) + ' ' + g];
+      if(b) parts.push('포상 +' + fmt(b));
+      if(p) parts.push('징계 −' + fmt(p));
+      parts.push('조정 ' + fmt(round2(g + b - p)));
+      lines.push(periodLabel(key, base) + ' · ' + parts.join(' · '));
     });
-    lines.push('최종 성과점수 ' + fmt(d.perfScore) + ' (조정점수 평균)');
-    lines.push('최종 역량점수 ' + fmt(d.compScore) + ' (수준 ' + (d.compAvg === null ? '–' : fmt(d.compAvg)) + '×90% + 개발 ' + fmt(d.dev) + '×10%)');
+    var perfLine = '최종 성과점수 ' + fmt(d.perfScore);
+    if(d.perfScore !== null){
+      if(base){
+        perfLine += ' (최근 4개년 조정점수 평균 ' + d.count + '반기)';
+      }else if(d.perfNote === 'recent'){
+        perfLine += ' (최근 3개년 ' + fmt(d.recent.perf) + ' × 100% · 그 외 비어 있음)';
+      }else if(d.perfNote === 'prior'){
+        perfLine += ' (그 외 ' + fmt(d.prior.perf) + ' × 100% · 최근 3개년 비어 있음)';
+      }else{
+        perfLine += ' (최근 3개년 ' + fmt(d.recent.perf) + ' × 60% + 그 외 ' + fmt(d.prior.perf) + ' × 40%)';
+      }
+    }
+    lines.push(perfLine);
+    var compScope = base ? '최근 4개년' : (d.r.id === 'L2' ? '최근 4개년' : '최근 3개년');
+    lines.push('최종 역량점수 ' + fmt(d.compScore) + ' (' + compScope + ' 평균 ' +
+      (d.compAvg === null ? '–' : fmt(d.compAvg)) + '×90% + 개발 ' + fmt(d.dev) + '×10%)');
     lines.push('최종 승진 점수 ' + fmt(d.final) + '점');
     if(d.target !== null && d.final !== null){
       lines.push('목표 ' + fmt(d.target) + '점 대비 ' + signed(d.final - d.target) + '점');
@@ -1040,10 +1306,53 @@
   bindNumber('dev');
   bindNumber('target');
 
+  periodsHost.addEventListener('click', function(e){
+    var t = e.target;
+    if(!t || !t.closest) return;
+    var chip = t.closest('.chip');
+    if(chip){
+      var key = chip.getAttribute('data-key');
+      var score = parseInt(chip.getAttribute('data-score'), 10);
+      if(state.grade[key] === score){ delete state.grade[key]; } else { state.grade[key] = score; }
+      sync();
+      save();
+      return;
+    }
+    var del = t.closest('button[data-del]');
+    if(del){ removePrior(del.getAttribute('data-del')); return; }
+    if(t.closest('#addPeriod')){ addPrior(); }
+  });
+  periodsHost.addEventListener('input', function(e){
+    var el = e.target;
+    if(!el || el.tagName !== 'INPUT' || !el.hasAttribute('data-adj')) return;
+    var field = el.getAttribute('data-adj');
+    var key = el.getAttribute('data-key');
+    var v = sanitize(el.value);
+    if(el.value !== v) el.value = v;
+    state[field][key] = v;
+    sync();
+    save();
+  });
+  periodsHost.addEventListener('blur', function(e){
+    var el = e.target;
+    if(!el || el.tagName !== 'INPUT' || !el.hasAttribute('data-adj')) return;
+    if(el.value === '' || el.value === '-') return;
+    var field = el.getAttribute('data-adj');
+    var key = el.getAttribute('data-key');
+    var n = numOf(el.value);
+    el.value = String(round2(n));
+    state[field][key] = el.value;
+    sync();
+    save();
+  }, true);
+
   document.getElementById('rankSeg').addEventListener('click', function(e){
     var btn = e.target.closest ? e.target.closest('button[data-rank]') : null;
     if(!btn) return;
-    state.rank = btn.getAttribute('data-rank');
+    var next = btn.getAttribute('data-rank');
+    if(state.rank === next) return;
+    state.rank = next;
+    buildPeriods();
     sync();
     save();
   });
@@ -1067,6 +1376,7 @@
     if(!window.confirm('입력한 내용을 모두 지울까요? 저장한 이력은 그대로 남아요.')) return;
     state = clone(DEFAULTS);
     try{ window.localStorage.removeItem(KEY); }catch(e){}
+    buildPeriods();
     paintInputs();
     sync();
     save();
