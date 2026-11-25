@@ -318,7 +318,7 @@
       <span class="unit">점</span>
       <span class="goal" id="goalChip"></span>
     </div>
-    <p class="fill-note" id="fillNote">성과역량·역량수준평가 등급을 입력하면 점수가 계산돼요.</p>
+    <p class="fill-note" id="fillNote">반기별 평가 등급을 하나 이상 고르면 점수가 계산돼요.</p>
 
     <div class="parts">
       <div class="part">
@@ -345,12 +345,13 @@
   </section>
 
   <section class="card">
-    <h2>평가 등급 <span class="sub" id="countNote">0 / 16 입력</span></h2>
+    <h2>평가 등급 <span class="sub" id="countNote">0 / 8 입력</span></h2>
     <div class="legend" aria-label="등급별 점수">
       <span><b>탁월</b> 95</span><span><b>우수</b> 90</span><span><b>양호</b> 85</span><span><b>노필</b> 80</span><span><b>개필</b> 75</span>
     </div>
     <div id="periods"></div>
-    <p class="hint">선택한 등급을 한 번 더 누르면 지워져요. 비어 있는 기간은 평균에서 빠져요.<br>
+    <p class="hint">반기마다 등급 1개만 고르면, 그 점수가 <b>성과역량</b>과 <b>역량수준평가</b>에 똑같이 들어가요.<br>
+      고른 등급을 한 번 더 누르면 지워지고, 비어 있는 기간은 평균에서 빠져요.<br>
       <b>조정 성과점수</b>는 그 기간의 <b>등급 + 포상 − 징계</b>예요. (예: 양호 85 + 표창 5 = 90)</p>
     <p class="hint warn" id="orphanNote" hidden>등급 없이 포상·징계만 넣은 기간은 계산에서 빠져요.</p>
   </section>
@@ -420,6 +421,7 @@
   'use strict';
 
   var GRADES = [['탁월',95],['우수',90],['양호',85],['노필',80],['개필',75]];
+  var GRADE_SCORES = GRADES.map(function(g){ return g[1]; });
   var RANKS = [
     {id:'L0', perf:40, comp:60},
     {id:'L1', perf:40, comp:60},
@@ -432,7 +434,7 @@
   YEARS.forEach(function(y){ TERMS.forEach(function(t){ KEYS.push('y' + y + t[1]); }); });
 
   var KEY = 'promotion-score-calculator.v2';
-  var DEFAULTS = {rank:'L2', perf:{}, comp:{}, bonus:{}, penalty:{}, dev:'', target:''};
+  var DEFAULTS = {rank:'L2', grade:{}, bonus:{}, penalty:{}, dev:'', target:''};
 
   var state = load();
 
@@ -480,7 +482,27 @@
         var p = JSON.parse(raw);
         if(p && typeof p === 'object'){
           if(typeof p.rank === 'string' && rankOf(p.rank).id === p.rank) s.rank = p.rank;
-          ['perf','comp','bonus','penalty'].forEach(function(k){
+          if(p.grade && typeof p.grade === 'object'){
+            for(var gk in p.grade){
+              if(p.grade.hasOwnProperty(gk) && KEYS.indexOf(gk) > -1){
+                var gv = Number(p.grade[gk]);
+                if(GRADE_SCORES.indexOf(gv) > -1) s.grade[gk] = gv;
+              }
+            }
+          }else{
+            /* 예전 저장값(성과·역량 따로 입력)을 반기당 등급 1개로 옮긴다 */
+            ['perf','comp'].forEach(function(k){
+              if(p[k] && typeof p[k] === 'object'){
+                for(var key in p[k]){
+                  if(p[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1 && s.grade[key] === undefined){
+                    var pv = Number(p[k][key]);
+                    if(GRADE_SCORES.indexOf(pv) > -1) s.grade[key] = pv;
+                  }
+                }
+              }
+            });
+          }
+          ['bonus','penalty'].forEach(function(k){
             if(p[k] && typeof p[k] === 'object'){
               for(var key in p[k]){
                 if(p[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1) s[k][key] = p[k][key];
@@ -533,15 +555,35 @@
       rank: rankOf(it.rank).id,
       dev: (it.dev === undefined || it.dev === null) ? '' : String(it.dev),
       target: (it.target === undefined || it.target === null) ? '' : String(it.target),
-      perf: {}, comp: {}, bonus: {}, penalty: {}
+      grade: {}, bonus: {}, penalty: {}
     };
-    ['perf','comp','bonus','penalty'].forEach(function(k){
+    /* 새 구조는 반기당 등급 1개. 예전 이력(성과·역량 따로)은 있는 쪽 등급을 쓴다. */
+    if(it.grade && typeof it.grade === 'object'){
+      for(var gk in it.grade){
+        if(it.grade.hasOwnProperty(gk) && KEYS.indexOf(gk) > -1){
+          var gv = Number(it.grade[gk]);
+          if(isFinite(gv) && GRADE_SCORES.indexOf(gv) > -1) rec.grade[gk] = gv;
+        }
+      }
+    }else{
+      ['perf','comp'].forEach(function(k){
+        if(it[k] && typeof it[k] === 'object'){
+          for(var key in it[k]){
+            if(it[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1 && rec.grade[key] === undefined){
+              var hv = Number(it[k][key]);
+              if(isFinite(hv) && GRADE_SCORES.indexOf(hv) > -1) rec.grade[key] = hv;
+            }
+          }
+        }
+      });
+    }
+    ['bonus','penalty'].forEach(function(k){
       if(it[k] && typeof it[k] === 'object'){
         for(var key in it[k]){
           if(it[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1){
             var v = it[k][key];
             if(v === undefined || v === null || v === '') continue;
-            rec[k][key] = (k === 'perf' || k === 'comp') ? Number(v) : String(v);
+            rec[k][key] = String(v);
           }
         }
       }
@@ -581,11 +623,10 @@
       dev: state.dev === undefined ? '' : String(state.dev),
       target: state.target === undefined ? '' : String(state.target),
       perfScore: d.perfScore, compScore: d.compScore, final: d.final,
-      perf: {}, comp: {}, bonus: {}, penalty: {}
+      grade: {}, bonus: {}, penalty: {}
     };
     KEYS.forEach(function(key){
-      if(typeof state.perf[key] === 'number') rec.perf[key] = state.perf[key];
-      if(typeof state.comp[key] === 'number') rec.comp[key] = state.comp[key];
+      if(typeof state.grade[key] === 'number') rec.grade[key] = state.grade[key];
       if(state.bonus[key] !== undefined && state.bonus[key] !== '') rec.bonus[key] = String(state.bonus[key]);
       if(state.penalty[key] !== undefined && state.penalty[key] !== '') rec.penalty[key] = String(state.penalty[key]);
     });
@@ -617,8 +658,7 @@
     state = clone(DEFAULTS);
     state.rank = rankOf(rec.rank).id;
     KEYS.forEach(function(key){
-      if(typeof rec.perf[key] === 'number') state.perf[key] = rec.perf[key];
-      if(typeof rec.comp[key] === 'number') state.comp[key] = rec.comp[key];
+      if(typeof rec.grade[key] === 'number') state.grade[key] = rec.grade[key];
       if(rec.bonus[key] !== undefined) state.bonus[key] = rec.bonus[key];
       if(rec.penalty[key] !== undefined) state.penalty[key] = rec.penalty[key];
     });
@@ -703,9 +743,9 @@
               '<span class="period-pill" id="adj-' + key + '">조정 –</span>' +
             '</div>' +
             '<div class="grade-row">' +
-              '<div class="grade-label"><span class="dot sage"></span>성과역량</div>' +
-              '<div class="grades" role="group" aria-label="' + name + ' 성과역량">' +
-                gradeButtons(key, 'perf', false, name + ' 성과역량') +
+              '<div class="grade-label">평가 등급</div>' +
+              '<div class="grades" role="group" aria-label="' + name + ' 평가 등급">' +
+                gradeButtons(key, name) +
               '</div>' +
             '</div>' +
             '<div class="adj-row">' +
@@ -722,12 +762,6 @@
                   'aria-label="' + name + ' 징계점수"></div>' +
               '</div>' +
             '</div>' +
-            '<div class="grade-row">' +
-              '<div class="grade-label"><span class="dot clay"></span>역량수준평가</div>' +
-              '<div class="grades" role="group" aria-label="' + name + ' 역량수준평가">' +
-                gradeButtons(key, 'comp', true, name + ' 역량수준평가') +
-              '</div>' +
-            '</div>' +
           '</div>'
         );
       });
@@ -738,10 +772,8 @@
     chips.forEach(function(b){
       b.addEventListener('click', function(){
         var key = b.getAttribute('data-key');
-        var dim = b.getAttribute('data-dim');
         var score = parseInt(b.getAttribute('data-score'), 10);
-        var store = dim === 'perf' ? state.perf : state.comp;
-        if(store[key] === score){ delete store[key]; } else { store[key] = score; }
+        if(state.grade[key] === score){ delete state.grade[key]; } else { state.grade[key] = score; }
         sync();
         save();
       });
@@ -769,11 +801,11 @@
       });
     });
   }
-  function gradeButtons(key, dim, isComp, label){
+  function gradeButtons(key, label){
     var out = '';
     for(var i = 0; i < GRADES.length; i++){
-      out += '<button type="button" class="chip' + (isComp ? ' comp' : '') + '"' +
-        ' data-key="' + key + '" data-dim="' + dim + '" data-score="' + GRADES[i][1] + '"' +
+      out += '<button type="button" class="chip"' +
+        ' data-key="' + key + '" data-score="' + GRADES[i][1] + '"' +
         ' aria-pressed="false" aria-label="' + label + ' ' + GRADES[i][0] + ' ' + GRADES[i][1] + '점">' +
         GRADES[i][0] + '</button>';
     }
@@ -784,34 +816,33 @@
   function calc(){
     var r = rankOf(state.rank);
 
-    var perfSum = 0, perfCount = 0;
-    var compSum = 0, compCount = 0;
+    var adjSum = 0, gradeSum = 0, count = 0;
     var bonusSum = 0, penaltySum = 0;
     var orphan = false;
     var rows = [];
 
     KEYS.forEach(function(key){
-      var g = state.perf[key];
+      var g = state.grade[key];
       var b = numOf(state.bonus[key]);
       var p = Math.abs(numOf(state.penalty[key]));
       var adj = null;
       if(typeof g === 'number'){
         adj = g + b - p;
-        perfSum += adj;
-        perfCount++;
+        adjSum += adj;
+        gradeSum += g;
+        count++;
         bonusSum += b;
         penaltySum += p;
       }else if(b !== 0 || p !== 0){
         orphan = true;
       }
-      var cg = state.comp[key];
-      if(typeof cg === 'number'){ compSum += cg; compCount++; }
-      rows.push({key:key, grade:typeof g === 'number' ? g : null, bonus:b, penalty:p, adj:adj,
-                 comp:typeof cg === 'number' ? cg : null});
+      rows.push({key:key, grade:typeof g === 'number' ? g : null, bonus:b, penalty:p, adj:adj});
     });
 
-    var perfAvg = perfCount ? perfSum / perfCount : null;
-    var compAvg = compCount ? compSum / compCount : null;
+    /* 성과: 반기별 조정점수(등급 + 포상 − 징계)의 산술평균
+       역량수준평가: 고른 등급의 산술평균 (포상·징계 미반영) */
+    var perfAvg = count ? adjSum / count : null;
+    var compAvg = count ? gradeSum / count : null;
     var dev = numOf(state.dev);
     var target = (state.target === '' || state.target === '-') ? null : numOf(state.target);
 
@@ -823,8 +854,7 @@
 
     return {
       r:r, rows:rows, perfAvg:perfAvg, compAvg:compAvg,
-      perfCount:perfCount, compCount:compCount,
-      bonusSum:bonusSum, penaltySum:penaltySum, orphan:orphan,
+      count:count, bonusSum:bonusSum, penaltySum:penaltySum, orphan:orphan,
       dev:dev, target:target, perfScore:perfScore, compScore:compScore, final:final
     };
   }
@@ -843,10 +873,8 @@
     for(var j = 0; j < chips.length; j++){
       var bEl = chips[j];
       var key = bEl.getAttribute('data-key');
-      var dim = bEl.getAttribute('data-dim');
       var score = parseInt(bEl.getAttribute('data-score'), 10);
-      var store = dim === 'perf' ? state.perf : state.comp;
-      bEl.setAttribute('aria-pressed', store[key] === score ? 'true' : 'false');
+      bEl.setAttribute('aria-pressed', state.grade[key] === score ? 'true' : 'false');
     }
 
     d.rows.forEach(function(row){
@@ -860,14 +888,13 @@
           pill.textContent = '조정 ' + fmt(row.adj);
         }
         pill.setAttribute('aria-label',
-          (row.grade !== null ? '성과역량 ' + row.grade : '성과역량 미입력') +
+          (row.grade !== null ? '등급 ' + gradeName(row.grade) + ' ' + row.grade : '등급 미입력') +
           ' + 포상 ' + fmt(row.bonus) + ' − 징계 ' + fmt(row.penalty) +
           (row.adj !== null ? ' = 조정 ' + fmt(row.adj) : ''));
       }
     });
 
-    var total = d.perfCount + d.compCount;
-    document.getElementById('countNote').textContent = total + ' / 16 입력';
+    document.getElementById('countNote').textContent = d.count + ' / 8 입력';
 
     var fEl = document.getElementById('finalScore');
     fEl.textContent = d.final === null ? '–' : fmt(d.final);
@@ -876,14 +903,9 @@
 
     var note = document.getElementById('fillNote');
     if(d.final === null){
-      var miss = [];
-      if(d.perfCount === 0) miss.push('성과역량');
-      if(d.compCount === 0) miss.push('역량수준평가');
-      note.textContent = miss.length === 2
-        ? '성과역량·역량수준평가 등급을 입력하면 점수가 계산돼요.'
-        : miss[0] + ' 등급을 하나 이상 입력하면 계산돼요.';
-    }else if(d.perfCount < 8 || d.compCount < 8){
-      note.textContent = '입력한 기간만 평균에 넣었어요 (성과 ' + d.perfCount + '개 · 역량 ' + d.compCount + '개).';
+      note.textContent = '반기별 평가 등급을 하나 이상 고르면 점수가 계산돼요.';
+    }else if(d.count < 8){
+      note.textContent = '입력한 기간만 평균에 넣었어요 (8개 중 ' + d.count + '개).';
     }else{
       note.textContent = '8개 기간 모두 반영했어요.';
     }
@@ -894,7 +916,7 @@
     document.getElementById('perfScore').textContent = d.perfScore === null ? '–' : fmt(d.perfScore);
     document.getElementById('perfFormula').textContent = d.perfScore === null
       ? '반기별 (등급 + 포상 − 징계) 평균'
-      : '조정점수 평균 · ' + d.perfCount + '개 기간 · 포상 ' + fmt(d.bonusSum) + ' · 징계 ' + fmt(d.penaltySum);
+      : '조정점수 평균 · ' + d.count + '개 기간 · 포상 ' + fmt(d.bonusSum) + ' · 징계 ' + fmt(d.penaltySum);
 
     document.getElementById('compScore').textContent = d.compScore === null ? '–' : fmt(d.compScore);
     document.getElementById('compFormula').textContent =
@@ -957,14 +979,13 @@
     var d = calc();
     var lines = ['승진 점수 계산 결과', '직급 ' + d.r.id + ' (성과 ' + d.r.perf + '% / 역량 ' + d.r.comp + '%)'];
     d.rows.forEach(function(row){
-      if(row.grade === null && row.comp === null) return;
+      if(row.grade === null) return;
       var nm = row.key.charAt(1) + '년차 ' + (row.key.indexOf('h1') > -1 ? '상반기' : '하반기');
       var parts = [];
-      parts.push('성과 ' + (row.grade === null ? '–' : gradeName(row.grade) + row.grade));
+      parts.push('등급 ' + gradeName(row.grade) + ' ' + row.grade);
       if(row.bonus) parts.push('포상 +' + fmt(row.bonus));
       if(row.penalty) parts.push('징계 −' + fmt(row.penalty));
-      if(row.adj !== null) parts.push('조정 ' + fmt(row.adj));
-      parts.push('역량 ' + (row.comp === null ? '–' : gradeName(row.comp) + row.comp));
+      parts.push('조정 ' + fmt(row.adj));
       lines.push(nm + ' · ' + parts.join(' · '));
     });
     lines.push('최종 성과점수 ' + fmt(d.perfScore) + ' (조정점수 평균)');
