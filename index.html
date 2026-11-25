@@ -644,6 +644,7 @@
     var rec = {
       id: String(it.id || it.ts),
       ts: Number(it.ts) || Date.now(),
+      v: Number(it.v) || 1,
       memo: typeof it.memo === 'string' ? it.memo.slice(0, 40) : '',
       rank: rankOf(it.rank).id,
       dev: (it.dev === undefined || it.dev === null) ? '' : String(it.dev),
@@ -721,6 +722,7 @@
     var rec = {
       id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 7),
       ts: Date.now(),
+      v: 3,
       memo: '',
       rank: state.rank,
       dev: state.dev === undefined ? '' : String(state.dev),
@@ -800,6 +802,7 @@
       var sub = '<b>' + rec.rank + '</b> · 성과 ' + (rec.perfScore === null ? '–' : fmt(rec.perfScore)) +
         ' · 역량 ' + (rec.compScore === null ? '–' : fmt(rec.compScore));
       if(rec.target !== '') sub += ' · 목표 ' + fmt(numOf(rec.target));
+      if(rec.v < 3) sub += ' · 이전 기준';
       buf.push(
         '<div class="hist-item" data-id="' + esc(rec.id) + '">' +
           '<div class="hist-item-top">' +
