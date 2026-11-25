@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<meta name="format-detection" content="telephone=no" />
+<title>승진 점수 계산표</title>
+<style>
+  :root{
+    --bg:#FAF6F0;
+    --card:#FFFFFF;
+    --soft:#F7F1E8;
+    --ink:#2F2A25;
+    --ink-soft:#564D44;
+    --muted:#8C8178;
+    --line:rgba(47,42,37,.10);
+    --line-strong:rgba(47,42,37,.18);
+    --sage:#5C7A67;
+    --sage-deep:#495F50;
+    --sage-soft:#E9EFE8;
+    --clay:#A85B3E;
+    --clay-soft:#F7E8E1;
+    --shadow:0 1px 2px rgba(47,42,37,.04), 0 10px 26px rgba(47,42,37,.05);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    font-size:16px;line-height:1.45;letter-spacing:-0.01em;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:600px;margin:0 auto;padding:20px 16px 128px;}
+
+  header{padding:6px 4px 4px;}
+  .eyebrow{font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--sage);margin-bottom:6px;}
+  h1{margin:0;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:-0.03em;}
+  header p{margin:8px 0 0;font-size:14px;color:var(--muted);}
+
+  .card{
+    background:var(--card);border:1px solid rgba(47,42,37,.05);
+    border-radius:20px;box-shadow:var(--shadow);
+    padding:16px;margin-top:14px;
+  }
+  .card h2{
+    margin:0 0 12px;font-size:15px;font-weight:700;letter-spacing:-0.02em;
+    display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  }
+  .card h2 .sub{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;font-variant-numeric:tabular-nums;}
+  .hint{margin:10px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted);}
+  .hint b{color:var(--ink-soft);font-weight:600;}
+  .hint.warn{color:var(--clay);}
+
+  /* ---------- result ---------- */
+  .result{background:linear-gradient(180deg,#FFFFFF 0%,#FDFAF5 100%);}
+  .result-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .result-top .t{font-size:12.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.01em;}
+  .badge{
+    font-size:11.5px;font-weight:600;color:var(--sage-deep);
+    background:var(--sage-soft);border-radius:999px;padding:5px 10px;white-space:nowrap;
+  }
+  .final-line{display:flex;align-items:flex-end;gap:6px;margin-top:6px;flex-wrap:wrap;}
+  .final{
+    font-size:42px;font-weight:700;line-height:1.05;letter-spacing:-0.045em;
+    font-variant-numeric:tabular-nums;
+  }
+  .final.empty{font-size:30px;color:#BFB5AB;font-weight:500;letter-spacing:0;}
+  .final-line .unit{font-size:16px;font-weight:600;color:var(--muted);padding-bottom:6px;}
+  .goal{
+    margin-left:auto;padding-bottom:7px;font-size:13px;font-weight:700;
+    font-variant-numeric:tabular-nums;color:var(--muted);
+  }
+  .goal.up{color:var(--sage-deep);}
+  .goal.down{color:var(--clay);}
+  .fill-note{margin:8px 0 0;font-size:12.5px;color:var(--muted);}
+
+  .parts{margin-top:14px;display:grid;gap:8px;}
+  .part{background:var(--soft);border-radius:14px;padding:11px 12px;}
+  .part-head{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--ink-soft);}
+  .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+  .dot.sage{background:var(--sage);}
+  .dot.clay{background:var(--clay);}
+  .part-score{margin-left:auto;font-size:17px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .part-formula{margin-top:4px;font-size:11.5px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .apply-line{
+    margin-top:8px;padding-top:10px;border-top:1px dashed var(--line-strong);
+    font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center;
+  }
+  .apply-line b{color:var(--ink-soft);font-weight:700;}
+
+  /* ---------- rank ---------- */
+  .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .seg button{
+    font-family:inherit;appearance:none;cursor:pointer;
+    border:1px solid var(--line);background:#FFF;color:var(--ink-soft);
+    border-radius:12px;padding:8px 2px 7px;min-height:56px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  .seg button b{font-size:16px;font-weight:700;letter-spacing:0;}
+  .seg button small{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:0;}
+  .seg button[aria-pressed="true"]{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .seg button[aria-pressed="true"] small{color:rgba(255,255,255,.82);}
+  .seg button:active{transform:scale(.985);}
+
+  /* ---------- grades ---------- */
+  .legend{
+    display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 14px;
+    font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;
+  }
+  .legend span b{color:var(--ink-soft);font-weight:600;}
+
+  .year-head{
+    font-size:12px;font-weight:700;color:var(--sage);letter-spacing:.02em;
+    margin:16px 0 7px;
+  }
+  .year-head:first-child{margin-top:0;}
+  .period{
+    background:var(--soft);border-radius:14px;padding:11px 12px 12px;margin-bottom:7px;
+  }
+  .period-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;}
+  .period-title{font-size:13.5px;font-weight:700;color:var(--ink);letter-spacing:-0.02em;}
+  .grade-row{margin-top:12px;}
+  .grade-label{
+    display:flex;align-items:center;gap:5px;
+    font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px;
+  }
+  .grades{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+  .chip{
+    font-family:inherit;appearance:none;cursor:pointer;
+    border:1px solid var(--line);background:#FFF;color:var(--ink-soft);
+    border-radius:10px;height:40px;padding:0;
+    font-size:14.5px;font-weight:600;letter-spacing:-0.02em;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .13s,border-color .13s,color .13s;
+  }
+  .chip:active{transform:scale(.97);}
+  .chip[aria-pressed="true"]{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .chip.comp[aria-pressed="true"]{background:var(--clay);border-color:var(--clay);}
+
+  /* ---------- per-period bonus / penalty ---------- */
+  .adj-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;}
+  .mini{display:flex;align-items:center;gap:6px;flex:1 1 104px;min-width:0;}
+  .mini-l{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;letter-spacing:0;}
+  .mini-l b{font-weight:700;}
+  .mini-l.plus b{color:var(--sage);}
+  .mini-l.minus b{color:var(--clay);}
+  .mini-inp{
+    flex:1 1 auto;min-width:0;display:flex;align-items:center;
+    background:#FFF;border:1px solid var(--line-strong);border-radius:10px;
+    height:40px;padding:0 8px;
+  }
+  .mini-inp:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px rgba(92,122,103,.13);}
+  .mini-inp input::placeholder,.inp input::placeholder{color:var(--muted);opacity:.55;}
+  .mini-inp input{
+    font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);
+    border:0;outline:none;background:transparent;width:100%;min-width:0;
+    text-align:right;font-variant-numeric:tabular-nums;padding:0;
+  }
+  .period-pill{
+    font-size:11.5px;font-weight:700;color:var(--sage-deep);
+    background:var(--sage-soft);border-radius:8px;padding:4px 8px;
+    font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:0;
+  }
+  .period-pill.empty{color:var(--muted);background:rgba(47,42,37,.05);}
+  .period-pill.pending{color:var(--clay);background:var(--clay-soft);}
+
+  /* ---------- single number field ---------- */
+  .field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 0;}
+  .field .fl{min-width:0;}
+  .field .fl label{display:block;font-size:14px;font-weight:600;color:var(--ink);}
+  .field .fl .fn{display:block;margin-top:2px;font-size:11.5px;color:var(--muted);}
+  .inp{
+    display:flex;align-items:center;gap:4px;flex:0 0 auto;
+    border:1px solid var(--line-strong);border-radius:12px;background:#FFF;
+    padding:0 10px;height:46px;width:118px;
+  }
+  .inp:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px rgba(92,122,103,.13);}
+  .inp input{
+    font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);
+    border:0;outline:none;background:transparent;width:100%;min-width:0;
+    text-align:right;font-variant-numeric:tabular-nums;padding:0;
+  }
+  .inp .u{font-size:12px;font-weight:600;color:var(--muted);}
+
+  /* ---------- actions ---------- */
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px;}
+  .btn{
+    font-family:inherit;font-size:14px;font-weight:700;letter-spacing:-0.01em;
+    border-radius:14px;padding:14px 10px;cursor:pointer;appearance:none;
+    border:1px solid var(--line-strong);background:#FFF;color:var(--ink-soft);
+  }
+  .btn.primary{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .btn:active{transform:scale(.99);}
+  footer{text-align:center;font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.6;}
+
+  /* ---------- history ---------- */
+  .hist-save-row{display:flex;align-items:center;gap:8px;}
+  .memo-inp{
+    flex:1 1 auto;min-width:0;display:flex;align-items:center;
+    background:#FFF;border:1px solid var(--line-strong);border-radius:12px;
+    height:46px;padding:0 12px;
+  }
+  .memo-inp:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px rgba(92,122,103,.13);}
+  .memo-inp input{
+    font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);
+    border:0;outline:none;background:transparent;width:100%;min-width:0;padding:0;
+    letter-spacing:-0.01em;
+  }
+  .memo-inp input::placeholder{color:var(--muted);opacity:.55;font-weight:500;}
+  .btn-save{
+    flex:0 0 auto;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:-0.01em;
+    height:46px;padding:0 16px;border-radius:12px;cursor:pointer;appearance:none;
+    border:1px solid var(--sage);background:var(--sage);color:#fff;
+  }
+  .btn-save:active{transform:scale(.985);}
+
+  .hist-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+  .hist-item{background:var(--soft);border-radius:14px;padding:12px 12px 11px;}
+  .hist-item-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .hist-date{font-size:11.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:0;}
+  .hist-final{
+    flex:0 0 auto;font-size:17px;font-weight:700;letter-spacing:-0.03em;
+    font-variant-numeric:tabular-nums;color:var(--ink);
+  }
+  .hist-final .u{font-size:11.5px;font-weight:600;color:var(--muted);margin-left:1px;letter-spacing:0;}
+  .hist-memo{margin-top:5px;font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.35;word-break:break-word;letter-spacing:-0.01em;}
+  .hist-sub{margin-top:3px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:0;}
+  .hist-sub b{color:var(--ink-soft);font-weight:700;}
+  .hist-acts{display:flex;align-items:center;gap:6px;margin-top:10px;}
+  .hist-btn{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:-0.01em;
+    border-radius:10px;padding:8px 13px;cursor:pointer;appearance:none;
+    border:1px solid var(--line-strong);background:#FFF;color:var(--ink-soft);
+  }
+  .hist-btn:active{transform:scale(.98);}
+  .hist-btn.load{border-color:rgba(92,122,103,.34);background:var(--sage-soft);color:var(--sage-deep);}
+  .hist-btn.del{border-color:rgba(168,91,62,.22);background:#FFF;color:var(--clay);}
+  .hist-acts .sp{flex:1 1 auto;}
+  .hist-empty{
+    margin-top:12px;padding:16px 12px;text-align:center;
+    background:var(--soft);border-radius:14px;font-size:12.5px;line-height:1.55;color:var(--muted);
+  }
+  .hist-empty b{color:var(--ink-soft);font-weight:600;}
+
+  /* ---------- dock ---------- */
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    padding:9px 16px calc(9px + env(safe-area-inset-bottom));
+    background:rgba(250,246,240,.93);
+    -webkit-backdrop-filter:saturate(1.5) blur(14px);
+    backdrop-filter:saturate(1.5) blur(14px);
+    border-top:1px solid var(--line);
+  }
+  .dock-in{max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .dock-l{display:flex;align-items:baseline;gap:6px;min-width:0;}
+  .dock-l .dl{font-size:11.5px;font-weight:600;color:var(--muted);}
+  .dock-l .dv{font-size:22px;font-weight:700;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;}
+  .dock-l .du{font-size:12px;font-weight:600;color:var(--muted);}
+  .dock-r{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right;margin-left:auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  .dock-save{
+    flex:0 0 auto;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:-0.01em;
+    color:#fff;background:var(--sage);border:1px solid var(--sage);
+    border-radius:999px;padding:0 13px;height:38px;cursor:pointer;appearance:none;white-space:nowrap;
+  }
+  .dock-save:active{transform:scale(.98);}
+  .dock-r.up{color:var(--sage-deep);}
+  .dock-r.down{color:var(--clay);}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));
+    transform:translate(-50%,10px);opacity:0;pointer-events:none;
+    background:rgba(47,42,37,.92);color:#fff;font-size:13px;font-weight:600;
+    padding:9px 16px;border-radius:999px;transition:opacity .18s,transform .18s;z-index:40;
+    white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0);}
+
+  @media (max-width:360px){
+    h1{font-size:22px;}
+    .final{font-size:36px;}
+    .chip{font-size:13px;height:38px;}
+    .grades{gap:4px;}
+    .card{padding:14px;border-radius:18px;}
+    .period{padding:10px 10px 11px;}
+    .mini-inp{height:38px;}
+  }
+  @media (max-width:381px){
+    .dock{gap:0;}
+    .dock-in{gap:8px;}
+    .dock-l .dv{font-size:20px;}
+    .dock-r{font-size:11px;}
+    .dock-save{padding:0 11px;font-size:12px;height:36px;}
+    .btn-save{padding:0 13px;font-size:13.5px;}
+  }
+  @media (min-width:560px){
+    .parts{grid-template-columns:1fr 1fr;}
+    .apply-line{grid-column:1 / -1;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">4개년 상·하반기 · 동일 가중치</div>
+    <h1>승진 점수 계산표</h1>
+    <p>등급·포상·징계만 넣으면 끝나요.</p>
+  </header>
+
+  <section class="card result" aria-live="polite">
+    <div class="result-top">
+      <span class="t">최종 승진 점수</span>
+      <span class="badge" id="ratioBadge">L2 · 성과 50% / 역량 50%</span>
+    </div>
+    <div class="final-line">
+      <span class="final" id="finalScore">–</span>
+      <span class="unit">점</span>
+      <span class="goal" id="goalChip"></span>
+    </div>
+    <p class="fill-note" id="fillNote">성과역량·역량수준평가 등급을 입력하면 점수가 계산돼요.</p>
+
+    <div class="parts">
+      <div class="part">
+        <div class="part-head"><span class="dot sage"></span>최종 성과점수<span class="part-score" id="perfScore">–</span></div>
+        <div class="part-formula" id="perfFormula">반기별 (등급 + 포상 − 징계) 평균</div>
+      </div>
+      <div class="part">
+        <div class="part-head"><span class="dot clay"></span>최종 역량점수<span class="part-score" id="compScore">–</span></div>
+        <div class="part-formula" id="compFormula">수준 – × 90% + 개발 – × 10%</div>
+      </div>
+    </div>
+    <div class="apply-line" id="applyLine">L2 · 성과 50% + 역량 50%</div>
+  </section>
+
+  <section class="card">
+    <h2>직급 <span class="sub">직급별 성과·역량 비율</span></h2>
+    <div class="seg" id="rankSeg" role="group" aria-label="직급 선택">
+      <button type="button" data-rank="L0"><b>L0</b><small>4 : 6</small></button>
+      <button type="button" data-rank="L1"><b>L1</b><small>4 : 6</small></button>
+      <button type="button" data-rank="L2"><b>L2</b><small>5 : 5</small></button>
+      <button type="button" data-rank="L3"><b>L3</b><small>7 : 3</small></button>
+    </div>
+    <p class="hint" id="rankHint">성과 40% + 역량 60%로 계산돼요.</p>
+  </section>
+
+  <section class="card">
+    <h2>평가 등급 <span class="sub" id="countNote">0 / 16 입력</span></h2>
+    <div class="legend" aria-label="등급별 점수">
+      <span><b>탁월</b> 95</span><span><b>우수</b> 90</span><span><b>양호</b> 85</span><span><b>노필</b> 80</span><span><b>개필</b> 75</span>
+    </div>
+    <div id="periods"></div>
+    <p class="hint">선택한 등급을 한 번 더 누르면 지워져요. 비어 있는 기간은 평균에서 빠져요.<br>
+      <b>조정 성과점수</b>는 그 기간의 <b>등급 + 포상 − 징계</b>예요. (예: 양호 85 + 표창 5 = 90)</p>
+    <p class="hint warn" id="orphanNote" hidden>등급 없이 포상·징계만 넣은 기간은 계산에서 빠져요.</p>
+  </section>
+
+  <section class="card">
+    <h2>역량개발평가 <span class="sub">전체 1개 · 역량점수의 10%</span></h2>
+    <div class="field">
+      <div class="fl">
+        <label for="dev">역량개발평가 점수</label>
+        <span class="fn">역량수준평가 90% + 개발 10%</span>
+      </div>
+      <div class="inp"><input id="dev" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="역량개발평가 점수"><span class="u">점</span></div>
+    </div>
+    <p class="hint">0으로 두면 역량점수는 <b>역량수준평가 평균의 90%</b>가 돼요.</p>
+  </section>
+
+  <section class="card">
+    <h2>목표 점수 <span class="sub">선택</span></h2>
+    <div class="field">
+      <div class="fl">
+        <label for="target">커트라인</label>
+        <span class="fn">입력하면 차이를 같이 보여줘요</span>
+      </div>
+      <div class="inp"><input id="target" type="text" inputmode="decimal" autocomplete="off" placeholder="–" aria-label="목표 점수"><span class="u">점</span></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn primary" id="copyBtn">결과 복사</button>
+    <button type="button" class="btn" id="resetBtn">초기화</button>
+  </div>
+
+  <section class="card" id="historyCard">
+    <h2>계산 이력 <span class="sub" id="histCount">0개</span></h2>
+    <div class="hist-save-row">
+      <div class="memo-inp">
+        <input id="memo" type="text" maxlength="40" autocomplete="off" enterkeyhint="done"
+          placeholder="메모 (선택) 예: 2027 상반기 기준" aria-label="이력 메모">
+      </div>
+      <button type="button" class="btn-save" id="saveBtn">이력 저장</button>
+    </div>
+    <p class="hint">메모를 비우면 <b>저장 시간 · 직급 · 최종점수</b>로 남아요.</p>
+    <div class="hist-list" id="histList"></div>
+    <p class="hist-empty" id="histEmpty">아직 저장한 이력이 없어요.<br><b>이력 저장</b>을 누르면 지금 계산이 이 기기에 남아요.</p>
+    <p class="hint" id="histFull" hidden>이 기기에는 최근 <b>50개</b>까지 남아요. 더 오래된 이력은 자동으로 지워져요.</p>
+  </section>
+
+  <footer>입력값과 계산 이력은 이 기기 브라우저에만 저장돼요.<br>파일로 열어도 그대로 계산됩니다.</footer>
+</div>
+
+<div class="dock">
+  <div class="dock-in">
+    <div class="dock-l">
+      <span class="dl">최종</span>
+      <span class="dv" id="dockScore">–</span>
+      <span class="du">점</span>
+    </div>
+    <div class="dock-r" id="dockDiff"></div>
+    <button type="button" class="dock-save" id="dockSave">이력 저장</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status">복사했어요</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var GRADES = [['탁월',95],['우수',90],['양호',85],['노필',80],['개필',75]];
+  var RANKS = [
+    {id:'L0', perf:40, comp:60},
+    {id:'L1', perf:40, comp:60},
+    {id:'L2', perf:50, comp:50},
+    {id:'L3', perf:70, comp:30}
+  ];
+  var YEARS = [1,2,3,4];
+  var TERMS = [['상반기','h1'],['하반기','h2']];
+  var KEYS = [];
+  YEARS.forEach(function(y){ TERMS.forEach(function(t){ KEYS.push('y' + y + t[1]); }); });
+
+  var KEY = 'promotion-score-calculator.v2';
+  var DEFAULTS = {rank:'L2', perf:{}, comp:{}, bonus:{}, penalty:{}, dev:'', target:''};
+
+  var state = load();
+
+  /* ---------- helpers ---------- */
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function numOf(v){
+    if(v === null || v === undefined) return 0;
+    var s = String(v).replace(/[^0-9.\-]/g,'').trim();
+    if(s === '' || s === '-' || s === '.' || s === '-.') return 0;
+    var n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+  function fmt(n){
+    if(n === null || n === undefined || !isFinite(n)) return '–';
+    var v = Math.abs(n) < 0.0001 ? 0 : n;
+    return v.toFixed(2);
+  }
+  function signed(n){
+    if(n === null || n === undefined || !isFinite(n)) return '–';
+    var v = Math.abs(n) < 0.0001 ? 0 : n;
+    return (v < 0 ? '−' : '+') + Math.abs(v).toFixed(2);
+  }
+  function gradeName(score){
+    for(var i = 0; i < GRADES.length; i++){ if(GRADES[i][1] === score) return GRADES[i][0]; }
+    return String(score);
+  }
+  function sanitize(v){
+    v = String(v).replace(/[^0-9.\-]/g,'');
+    v = v.replace(/(?!^)-/g,'');
+    var i = v.indexOf('.');
+    if(i > -1){ v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g,''); }
+    return v.slice(0, 9);
+  }
+  function rankOf(id){
+    for(var i = 0; i < RANKS.length; i++){ if(RANKS[i].id === id) return RANKS[i]; }
+    return RANKS[2];
+  }
+
+  /* ---------- storage ---------- */
+  function load(){
+    var s = clone(DEFAULTS);
+    try{
+      var raw = window.localStorage.getItem(KEY);
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && typeof p === 'object'){
+          if(typeof p.rank === 'string' && rankOf(p.rank).id === p.rank) s.rank = p.rank;
+          ['perf','comp','bonus','penalty'].forEach(function(k){
+            if(p[k] && typeof p[k] === 'object'){
+              for(var key in p[k]){
+                if(p[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1) s[k][key] = p[k][key];
+              }
+            }
+          });
+          ['dev','target'].forEach(function(k){
+            if(typeof p[k] === 'string' || typeof p[k] === 'number') s[k] = String(p[k]);
+          });
+        }
+      }
+    }catch(e){}
+    return s;
+  }
+  function save(){
+    try{ window.localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* ---------- history (기록 저장·조회·불러오기) ---------- */
+  var HIST_KEY = 'promotion-score-calculator.history.v1';
+  var HIST_MAX = 50;
+  var history = loadHistory();
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad2(n){ return n < 10 ? '0' + n : String(n); }
+  function fmtDate(ts){
+    var d = new Date(ts);
+    return d.getFullYear() + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function fmtWhen(ts){
+    var d = new Date(ts);
+    var now = new Date();
+    var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    if(sameDay) return '오늘 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    var y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    if(d.getFullYear() === y.getFullYear() && d.getMonth() === y.getMonth() && d.getDate() === y.getDate())
+      return '어제 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    return fmtDate(ts);
+  }
+  function normalizeHist(it){
+    var rec = {
+      id: String(it.id || it.ts),
+      ts: Number(it.ts) || Date.now(),
+      memo: typeof it.memo === 'string' ? it.memo.slice(0, 40) : '',
+      rank: rankOf(it.rank).id,
+      dev: (it.dev === undefined || it.dev === null) ? '' : String(it.dev),
+      target: (it.target === undefined || it.target === null) ? '' : String(it.target),
+      perf: {}, comp: {}, bonus: {}, penalty: {}
+    };
+    ['perf','comp','bonus','penalty'].forEach(function(k){
+      if(it[k] && typeof it[k] === 'object'){
+        for(var key in it[k]){
+          if(it[k].hasOwnProperty(key) && KEYS.indexOf(key) > -1){
+            var v = it[k][key];
+            if(v === undefined || v === null || v === '') continue;
+            rec[k][key] = (k === 'perf' || k === 'comp') ? Number(v) : String(v);
+          }
+        }
+      }
+    });
+    ['perfScore','compScore','final'].forEach(function(k){
+      rec[k] = (typeof it[k] === 'number' && isFinite(it[k])) ? it[k] : null;
+    });
+    return rec;
+  }
+  function loadHistory(){
+    var out = [];
+    try{
+      var raw = window.localStorage.getItem(HIST_KEY);
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && Object.prototype.toString.call(p) === '[object Array]'){
+          for(var i = 0; i < p.length; i++){
+            if(p[i] && typeof p[i] === 'object' && p[i].ts) out.push(normalizeHist(p[i]));
+          }
+        }
+      }
+    }catch(e){}
+    out.sort(function(a, b){ return b.ts - a.ts; });
+    return out.slice(0, HIST_MAX);
+  }
+  function persistHistory(){
+    try{ window.localStorage.setItem(HIST_KEY, JSON.stringify(history)); }
+    catch(e){ toast('저장 공간이 부족해 이력을 남기지 못했어요'); }
+  }
+  function snapshot(){
+    var d = calc();
+    var rec = {
+      id: String(Date.now()) + '-' + Math.random().toString(36).slice(2, 7),
+      ts: Date.now(),
+      memo: '',
+      rank: state.rank,
+      dev: state.dev === undefined ? '' : String(state.dev),
+      target: state.target === undefined ? '' : String(state.target),
+      perfScore: d.perfScore, compScore: d.compScore, final: d.final,
+      perf: {}, comp: {}, bonus: {}, penalty: {}
+    };
+    KEYS.forEach(function(key){
+      if(typeof state.perf[key] === 'number') rec.perf[key] = state.perf[key];
+      if(typeof state.comp[key] === 'number') rec.comp[key] = state.comp[key];
+      if(state.bonus[key] !== undefined && state.bonus[key] !== '') rec.bonus[key] = String(state.bonus[key]);
+      if(state.penalty[key] !== undefined && state.penalty[key] !== '') rec.penalty[key] = String(state.penalty[key]);
+    });
+    return rec;
+  }
+  function addHistory(){
+    var d = calc();
+    if(d.final === null){
+      toast('등급을 입력해야 이력으로 저장할 수 있어요');
+      return;
+    }
+    var memoEl = document.getElementById('memo');
+    var rec = snapshot();
+    rec.memo = (memoEl.value || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    history.unshift(rec);
+    if(history.length > HIST_MAX) history = history.slice(0, HIST_MAX);
+    persistHistory();
+    renderHistory();
+    memoEl.value = '';
+    toast(rec.memo ? '이력에 저장했어요 · ' + rec.memo : '이력에 저장했어요');
+  }
+  function findHist(id){
+    for(var i = 0; i < history.length; i++){ if(history[i].id === id) return history[i]; }
+    return null;
+  }
+  function applyHistory(id){
+    var rec = findHist(id);
+    if(!rec) return;
+    state = clone(DEFAULTS);
+    state.rank = rankOf(rec.rank).id;
+    KEYS.forEach(function(key){
+      if(typeof rec.perf[key] === 'number') state.perf[key] = rec.perf[key];
+      if(typeof rec.comp[key] === 'number') state.comp[key] = rec.comp[key];
+      if(rec.bonus[key] !== undefined) state.bonus[key] = rec.bonus[key];
+      if(rec.penalty[key] !== undefined) state.penalty[key] = rec.penalty[key];
+    });
+    state.dev = rec.dev;
+    state.target = rec.target;
+    paintInputs();
+    sync();
+    save();
+    toast('이력을 불러왔어요 · ' + fmtWhen(rec.ts));
+    try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    catch(e){ window.scrollTo(0, 0); }
+  }
+  function deleteHistory(id){
+    var rec = findHist(id);
+    if(!rec) return;
+    if(!window.confirm(fmtWhen(rec.ts) + ' 이력을 지울까요?')) return;
+    var next = [];
+    for(var i = 0; i < history.length; i++){ if(history[i].id !== id) next.push(history[i]); }
+    history = next;
+    persistHistory();
+    renderHistory();
+    toast('이력을 지웠어요');
+  }
+  function renderHistory(){
+    var host = document.getElementById('histList');
+    document.getElementById('histCount').textContent = history.length + '개';
+    document.getElementById('histEmpty').hidden = history.length > 0;
+    document.getElementById('histFull').hidden = history.length < HIST_MAX;
+    if(!history.length){ host.innerHTML = ''; return; }
+    var buf = [];
+    history.forEach(function(rec){
+      var sub = '<b>' + rec.rank + '</b> · 성과 ' + (rec.perfScore === null ? '–' : fmt(rec.perfScore)) +
+        ' · 역량 ' + (rec.compScore === null ? '–' : fmt(rec.compScore));
+      if(rec.target !== '') sub += ' · 목표 ' + fmt(numOf(rec.target));
+      buf.push(
+        '<div class="hist-item" data-id="' + esc(rec.id) + '">' +
+          '<div class="hist-item-top">' +
+            '<span class="hist-date">' + esc(fmtWhen(rec.ts)) + '</span>' +
+            '<span class="hist-final">' + (rec.final === null ? '–' : fmt(rec.final)) + '<span class="u">점</span></span>' +
+          '</div>' +
+          (rec.memo ? '<div class="hist-memo">' + esc(rec.memo) + '</div>' : '') +
+          '<div class="hist-sub">' + sub + '</div>' +
+          '<div class="hist-acts">' +
+            '<button type="button" class="hist-btn load" data-act="load" data-id="' + esc(rec.id) + '">불러오기</button>' +
+            '<span class="sp"></span>' +
+            '<button type="button" class="hist-btn del" data-act="del" data-id="' + esc(rec.id) + '">삭제</button>' +
+          '</div>' +
+        '</div>'
+      );
+    });
+    host.innerHTML = buf.join('');
+  }
+
+  function paintInputs(){
+    miniInputs.forEach(function(el){
+      var field = el.getAttribute('data-adj');
+      var key = el.getAttribute('data-key');
+      var v = state[field][key];
+      el.value = (v === undefined || v === null || v === '') ? '' : String(v);
+    });
+    var devEl = document.getElementById('dev');
+    var tgtEl = document.getElementById('target');
+    if(devEl) devEl.value = (state.dev === '' || state.dev === undefined) ? '' : String(state.dev);
+    if(tgtEl) tgtEl.value = (state.target === '' || state.target === undefined) ? '' : String(state.target);
+  }
+
+  /* ---------- build periods ---------- */
+  var chips = [];
+  var miniInputs = [];
+  function buildPeriods(){
+    var host = document.getElementById('periods');
+    var buf = [];
+    YEARS.forEach(function(y){
+      buf.push('<div class="year-head">' + y + '년차</div>');
+      TERMS.forEach(function(t){
+        var key = 'y' + y + t[1];
+        var name = y + '년차 ' + t[0];
+        buf.push(
+          '<div class="period" data-key="' + key + '">' +
+            '<div class="period-top">' +
+              '<span class="period-title">' + name + '</span>' +
+              '<span class="period-pill" id="adj-' + key + '">조정 –</span>' +
+            '</div>' +
+            '<div class="grade-row">' +
+              '<div class="grade-label"><span class="dot sage"></span>성과역량</div>' +
+              '<div class="grades" role="group" aria-label="' + name + ' 성과역량">' +
+                gradeButtons(key, 'perf', false, name + ' 성과역량') +
+              '</div>' +
+            '</div>' +
+            '<div class="adj-row">' +
+              '<div class="mini">' +
+                '<label class="mini-l plus" for="b-' + key + '">포상 <b>+</b></label>' +
+                '<div class="mini-inp"><input id="b-' + key + '" type="text" inputmode="decimal" ' +
+                  'autocomplete="off" placeholder="0" data-adj="bonus" data-key="' + key + '" ' +
+                  'aria-label="' + name + ' 포상점수"></div>' +
+              '</div>' +
+              '<div class="mini">' +
+                '<label class="mini-l minus" for="p-' + key + '">징계 <b>−</b></label>' +
+                '<div class="mini-inp"><input id="p-' + key + '" type="text" inputmode="decimal" ' +
+                  'autocomplete="off" placeholder="0" data-adj="penalty" data-key="' + key + '" ' +
+                  'aria-label="' + name + ' 징계점수"></div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="grade-row">' +
+              '<div class="grade-label"><span class="dot clay"></span>역량수준평가</div>' +
+              '<div class="grades" role="group" aria-label="' + name + ' 역량수준평가">' +
+                gradeButtons(key, 'comp', true, name + ' 역량수준평가') +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      });
+    });
+    host.innerHTML = buf.join('');
+
+    chips = Array.prototype.slice.call(host.querySelectorAll('.chip'));
+    chips.forEach(function(b){
+      b.addEventListener('click', function(){
+        var key = b.getAttribute('data-key');
+        var dim = b.getAttribute('data-dim');
+        var score = parseInt(b.getAttribute('data-score'), 10);
+        var store = dim === 'perf' ? state.perf : state.comp;
+        if(store[key] === score){ delete store[key]; } else { store[key] = score; }
+        sync();
+        save();
+      });
+    });
+
+    miniInputs = Array.prototype.slice.call(host.querySelectorAll('input[data-adj]'));
+    miniInputs.forEach(function(el){
+      var field = el.getAttribute('data-adj');
+      var key = el.getAttribute('data-key');
+      el.value = state[field][key] === undefined || state[field][key] === '' ? '' : String(state[field][key]);
+      el.addEventListener('input', function(){
+        var v = sanitize(el.value);
+        if(el.value !== v) el.value = v;
+        state[field][key] = v;
+        sync();
+        save();
+      });
+      el.addEventListener('blur', function(){
+        if(el.value === '' || el.value === '-') return;
+        var n = numOf(el.value);
+        el.value = (Math.round(n * 100) / 100).toString();
+        state[field][key] = el.value;
+        sync();
+        save();
+      });
+    });
+  }
+  function gradeButtons(key, dim, isComp, label){
+    var out = '';
+    for(var i = 0; i < GRADES.length; i++){
+      out += '<button type="button" class="chip' + (isComp ? ' comp' : '') + '"' +
+        ' data-key="' + key + '" data-dim="' + dim + '" data-score="' + GRADES[i][1] + '"' +
+        ' aria-pressed="false" aria-label="' + label + ' ' + GRADES[i][0] + ' ' + GRADES[i][1] + '점">' +
+        GRADES[i][0] + '</button>';
+    }
+    return out;
+  }
+
+  /* ---------- compute ---------- */
+  function calc(){
+    var r = rankOf(state.rank);
+
+    var perfSum = 0, perfCount = 0;
+    var compSum = 0, compCount = 0;
+    var bonusSum = 0, penaltySum = 0;
+    var orphan = false;
+    var rows = [];
+
+    KEYS.forEach(function(key){
+      var g = state.perf[key];
+      var b = numOf(state.bonus[key]);
+      var p = Math.abs(numOf(state.penalty[key]));
+      var adj = null;
+      if(typeof g === 'number'){
+        adj = g + b - p;
+        perfSum += adj;
+        perfCount++;
+        bonusSum += b;
+        penaltySum += p;
+      }else if(b !== 0 || p !== 0){
+        orphan = true;
+      }
+      var cg = state.comp[key];
+      if(typeof cg === 'number'){ compSum += cg; compCount++; }
+      rows.push({key:key, grade:typeof g === 'number' ? g : null, bonus:b, penalty:p, adj:adj,
+                 comp:typeof cg === 'number' ? cg : null});
+    });
+
+    var perfAvg = perfCount ? perfSum / perfCount : null;
+    var compAvg = compCount ? compSum / compCount : null;
+    var dev = numOf(state.dev);
+    var target = (state.target === '' || state.target === '-') ? null : numOf(state.target);
+
+    var perfScore = perfAvg;
+    var compScore = compAvg === null ? null : (compAvg * 0.9 + dev * 0.1);
+    var final = (perfScore !== null && compScore !== null)
+      ? perfScore * (r.perf / 100) + compScore * (r.comp / 100)
+      : null;
+
+    return {
+      r:r, rows:rows, perfAvg:perfAvg, compAvg:compAvg,
+      perfCount:perfCount, compCount:compCount,
+      bonusSum:bonusSum, penaltySum:penaltySum, orphan:orphan,
+      dev:dev, target:target, perfScore:perfScore, compScore:compScore, final:final
+    };
+  }
+
+  /* ---------- render ---------- */
+  function sync(){
+    var d = calc();
+
+    var segs = document.querySelectorAll('#rankSeg button');
+    for(var i = 0; i < segs.length; i++){
+      segs[i].setAttribute('aria-pressed', segs[i].getAttribute('data-rank') === d.r.id ? 'true' : 'false');
+    }
+    document.getElementById('rankHint').textContent = d.r.id + ' · 성과 ' + d.r.perf + '% + 역량 ' + d.r.comp + '%로 계산돼요.';
+    document.getElementById('ratioBadge').textContent = d.r.id + ' · 성과 ' + d.r.perf + '% / 역량 ' + d.r.comp + '%';
+
+    for(var j = 0; j < chips.length; j++){
+      var bEl = chips[j];
+      var key = bEl.getAttribute('data-key');
+      var dim = bEl.getAttribute('data-dim');
+      var score = parseInt(bEl.getAttribute('data-score'), 10);
+      var store = dim === 'perf' ? state.perf : state.comp;
+      bEl.setAttribute('aria-pressed', store[key] === score ? 'true' : 'false');
+    }
+
+    d.rows.forEach(function(row){
+      var pill = document.getElementById('adj-' + row.key);
+      if(pill){
+        if(row.adj === null){
+          pill.className = 'period-pill' + ((row.bonus || row.penalty) ? ' pending' : ' empty');
+          pill.textContent = '조정 –';
+        }else{
+          pill.className = 'period-pill';
+          pill.textContent = '조정 ' + fmt(row.adj);
+        }
+        pill.setAttribute('aria-label',
+          (row.grade !== null ? '성과역량 ' + row.grade : '성과역량 미입력') +
+          ' + 포상 ' + fmt(row.bonus) + ' − 징계 ' + fmt(row.penalty) +
+          (row.adj !== null ? ' = 조정 ' + fmt(row.adj) : ''));
+      }
+    });
+
+    var total = d.perfCount + d.compCount;
+    document.getElementById('countNote').textContent = total + ' / 16 입력';
+
+    var fEl = document.getElementById('finalScore');
+    fEl.textContent = d.final === null ? '–' : fmt(d.final);
+    fEl.className = 'final' + (d.final === null ? ' empty' : '');
+    document.getElementById('dockScore').textContent = d.final === null ? '–' : fmt(d.final);
+
+    var note = document.getElementById('fillNote');
+    if(d.final === null){
+      var miss = [];
+      if(d.perfCount === 0) miss.push('성과역량');
+      if(d.compCount === 0) miss.push('역량수준평가');
+      note.textContent = miss.length === 2
+        ? '성과역량·역량수준평가 등급을 입력하면 점수가 계산돼요.'
+        : miss[0] + ' 등급을 하나 이상 입력하면 계산돼요.';
+    }else if(d.perfCount < 8 || d.compCount < 8){
+      note.textContent = '입력한 기간만 평균에 넣었어요 (성과 ' + d.perfCount + '개 · 역량 ' + d.compCount + '개).';
+    }else{
+      note.textContent = '8개 기간 모두 반영했어요.';
+    }
+
+    var orphanNote = document.getElementById('orphanNote');
+    if(d.orphan){ orphanNote.removeAttribute('hidden'); } else { orphanNote.setAttribute('hidden',''); }
+
+    document.getElementById('perfScore').textContent = d.perfScore === null ? '–' : fmt(d.perfScore);
+    document.getElementById('perfFormula').textContent = d.perfScore === null
+      ? '반기별 (등급 + 포상 − 징계) 평균'
+      : '조정점수 평균 · ' + d.perfCount + '개 기간 · 포상 ' + fmt(d.bonusSum) + ' · 징계 ' + fmt(d.penaltySum);
+
+    document.getElementById('compScore').textContent = d.compScore === null ? '–' : fmt(d.compScore);
+    document.getElementById('compFormula').textContent =
+      '수준 ' + (d.compAvg === null ? '–' : fmt(d.compAvg)) + ' × 90% + 개발 ' + fmt(d.dev) + ' × 10%';
+
+    document.getElementById('applyLine').innerHTML = d.final === null
+      ? '등급을 입력하면 계산식이 여기에 보여요.'
+      : '<b>' + d.r.id + '</b> · 성과 ' + fmt(d.perfScore) + ' × ' + d.r.perf + '% + 역량 ' +
+        fmt(d.compScore) + ' × ' + d.r.comp + '% = <b>' + fmt(d.final) + '</b>';
+
+    var goalChip = document.getElementById('goalChip');
+    var dockDiff = document.getElementById('dockDiff');
+    goalChip.className = 'goal';
+    dockDiff.className = 'dock-r';
+    if(d.target !== null && d.final !== null){
+      var diff = d.final - d.target;
+      goalChip.textContent = Math.abs(diff) < 0.005
+        ? '목표와 동일'
+        : (diff > 0 ? '목표보다 +' + fmt(diff) + '점' : '목표까지 −' + fmt(Math.abs(diff)) + '점');
+      goalChip.classList.add(diff >= 0 ? 'up' : 'down');
+      dockDiff.textContent = '목표 ' + fmt(d.target) + ' · ' + (Math.abs(diff) < 0.005 ? '±0.00' : signed(diff));
+      dockDiff.classList.add(diff >= 0 ? 'up' : 'down');
+    }else{
+      goalChip.textContent = '';
+      dockDiff.textContent = '목표 점수는 선택';
+    }
+  }
+
+  /* ---------- single inputs ---------- */
+  function bindNumber(id){
+    var el = document.getElementById(id);
+    el.value = state[id] === '' ? '' : String(state[id]);
+    el.addEventListener('input', function(){
+      var v = sanitize(el.value);
+      if(el.value !== v) el.value = v;
+      state[id] = v;
+      sync();
+      save();
+    });
+    el.addEventListener('blur', function(){
+      if(el.value === '' || el.value === '-') return;
+      var n = numOf(el.value);
+      el.value = (Math.round(n * 100) / 100).toString();
+      state[id] = el.value;
+      sync();
+      save();
+    });
+  }
+
+  /* ---------- toast / copy ---------- */
+  var toastTimer = null;
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 1800);
+  }
+  function summaryText(){
+    var d = calc();
+    var lines = ['승진 점수 계산 결과', '직급 ' + d.r.id + ' (성과 ' + d.r.perf + '% / 역량 ' + d.r.comp + '%)'];
+    d.rows.forEach(function(row){
+      if(row.grade === null && row.comp === null) return;
+      var nm = row.key.charAt(1) + '년차 ' + (row.key.indexOf('h1') > -1 ? '상반기' : '하반기');
+      var parts = [];
+      parts.push('성과 ' + (row.grade === null ? '–' : gradeName(row.grade) + row.grade));
+      if(row.bonus) parts.push('포상 +' + fmt(row.bonus));
+      if(row.penalty) parts.push('징계 −' + fmt(row.penalty));
+      if(row.adj !== null) parts.push('조정 ' + fmt(row.adj));
+      parts.push('역량 ' + (row.comp === null ? '–' : gradeName(row.comp) + row.comp));
+      lines.push(nm + ' · ' + parts.join(' · '));
+    });
+    lines.push('최종 성과점수 ' + fmt(d.perfScore) + ' (조정점수 평균)');
+    lines.push('최종 역량점수 ' + fmt(d.compScore) + ' (수준 ' + (d.compAvg === null ? '–' : fmt(d.compAvg)) + '×90% + 개발 ' + fmt(d.dev) + '×10%)');
+    lines.push('최종 승진 점수 ' + fmt(d.final) + '점');
+    if(d.target !== null && d.final !== null){
+      lines.push('목표 ' + fmt(d.target) + '점 대비 ' + signed(d.final - d.target) + '점');
+    }
+    return lines.join('\n');
+  }
+  function copyResult(){
+    var text = summaryText();
+    var done = function(){ toast('결과를 복사했어요'); };
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly','');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = false;
+      try{ ok = document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta);
+      toast(ok ? '결과를 복사했어요' : '복사가 안 됐어요. 길게 눌러 복사해 주세요.');
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    }else{
+      fallback();
+    }
+  }
+
+  /* ---------- init ---------- */
+  buildPeriods();
+  bindNumber('dev');
+  bindNumber('target');
+
+  document.getElementById('rankSeg').addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-rank]') : null;
+    if(!btn) return;
+    state.rank = btn.getAttribute('data-rank');
+    sync();
+    save();
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', copyResult);
+
+  document.getElementById('saveBtn').addEventListener('click', addHistory);
+  document.getElementById('dockSave').addEventListener('click', addHistory);
+  document.getElementById('memo').addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.keyCode === 13){ e.preventDefault(); addHistory(); }
+  });
+  document.getElementById('histList').addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
+    if(!btn) return;
+    var id = btn.getAttribute('data-id');
+    if(btn.getAttribute('data-act') === 'load'){ applyHistory(id); }
+    else{ deleteHistory(id); }
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if(!window.confirm('입력한 내용을 모두 지울까요? 저장한 이력은 그대로 남아요.')) return;
+    state = clone(DEFAULTS);
+    try{ window.localStorage.removeItem(KEY); }catch(e){}
+    paintInputs();
+    sync();
+    save();
+    toast('초기화했어요');
+  });
+
+  renderHistory();
+  sync();
+})();
+</script>
+</body>
+</html>
